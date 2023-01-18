@@ -1,0 +1,75 @@
+{
+    "common": {
+        "label": {
+            "payload": "Payload",
+            "topic": "Topic",
+            "name": "Name",
+            "username": "Username",
+            "password": "Password",
+            "property": "Property"
+        },
+        "status": {
+            "connected": "connected",
+            "not-connected": "not connected",
+            "disconnected": "disconnected",
+            "connecting": "connecting",
+            "error": "error",
+            "ok": "OK"
+        },
+        "notification": {
+            "error": "<strong>Error</strong>: __message__",
+            "errors": {
+                "no-response": "no response from server",
+                "unexpected": "unexpected error (__status__) __message__"
+            }
+        },
+        "errors": {}
+    },
+    "config": {
+		"label": {
+			"name": "Jack Config",
+			"server": "Server",
+            "port": "Port",
+            "use-tls": "Enable secure (SSL/TLS) connection",
+            "use-auth": "Use basic authentication"
+		},
+        "input": {
+            "name": "Jack Config Name",
+			"server": "e.g. localhost | 127.0.0.1 | ip"
+        }
+	},
+    "bridge": {
+		"label": {
+			"name": "Jack Bridge",
+			"missing-ip": "Missing Bridge IP…",
+			"disable-events": "Disable events",
+			"unknown-error": "Something went wrong. Please retry.",
+			"invalid": "Sorry. Your selected Bridge is invalid: ",
+			"connecting": "Connecting with the bridge…"
+		},
+		"input": {
+			"name": "Jack Bridge Name",
+			"statusmsg": "Status queried successfully…"
+		},
+        "node": {
+            "input": "Settings / Queries",
+			"output0": "Bridge Information",
+            "output1": "MQTT Verbindung"
+        }
+	},
+    "value": {
+		"label": {
+			"name": "Jack Value",
+            "change": "Emit only changed values",
+            "cache": "Emit cached value on start"
+		},
+		"input": {
+			"name": "Jack Value Name",
+            "topic": "Pattern, e.g. ${domain}"
+		},
+        "node": {
+            "input": "Settings / Queries",
+			"output": "Output"
+        }
+	}
+}

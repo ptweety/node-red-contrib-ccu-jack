@@ -1,0 +1,380 @@
+<script type="text/html" data-template-name="jack-value">
+    <div class="form-row">
+        <label for="node-input-name">
+            <i class="fa fa-tag"></i> <span data-i18n="@ptweety/node-red-contrib-ccu-jack/messages:common.label.name"></span>
+        </label>
+        <input type="text" id="node-input-name" data-i18n="[placeholder]@ptweety/node-red-contrib-ccu-jack/messages:value.input.name" style="width: calc(100% - 105px)">
+    </div>
+
+    <div class="form-row">
+        <label for="node-input-jack">
+            <i class="fa fa-globe"></i> <span data-i18n="@ptweety/node-red-contrib-ccu-jack/messages:config.label.name"></span>
+        </label>
+        <input type="text" id="node-input-jack" style="width: calc(100% - 105px)">
+    </div>
+
+    <div class="form-row">
+        <label for="node-input-topic">
+            <i class="fa fa-tasks"></i> <span data-i18n="@ptweety/node-red-contrib-ccu-jack/messages:common.label.topic"></span>
+        </label>
+        <input type="text" id="node-input-topic" data-i18n="[placeholder]@ptweety/node-red-contrib-ccu-jack/messages:value.input.topic" style="width: calc(100% - 105px)">
+    </div>
+
+    <div class="form-row">
+        <label for="node-input-domain"><i class="fa fa-empire"></i> domain</label>
+        <select id="node-input-domain"></select>
+    </div>
+
+    <div class="form-row for-device for-virtdev">
+        <label for="node-input-interfaceType">interfaceType</label>
+        <input type="text" id="node-input-interfaceType" class="node-typed-input-property-value" style="width: calc(100% - 105px)">
+        <input type="hidden" id="node-input-interfaceTypeT" class="node-typed-input-property-type">
+    </div>
+
+    <div class="form-row for-device for-virtdev">
+        <label for="node-input-room">room</label>
+        <input type="text" id="node-input-room" class="node-typed-input-property-value" style="width: calc(100% - 105px)">
+        <input type="hidden" id="node-input-roomT" class="node-typed-input-property-type">
+    </div>
+
+    <div class="form-row for-device for-virtdev">
+        <label for="node-input-function">function</label>
+        <input type="text" id="node-input-function" class="node-typed-input-property-value" style="width: calc(100% - 105px)">
+        <input type="hidden" id="node-input-functionT" class="node-typed-input-property-type">
+    </div>
+
+    <div class="form-row for-device for-virtdev">
+        <label for="node-input-device">device</label>
+        <input type="text" id="node-input-device" class="node-typed-input-property-value" style="width: calc(100% - 105px)">
+        <input type="hidden" id="node-input-deviceT" class="node-typed-input-property-type">
+    </div>
+
+    <!--
+    <div class="form-row for-device for-virtdev">
+        <label for="node-input-deviceName">deviceName</label>
+        <input type="text" id="node-input-deviceName" class="node-typed-input-property-value" style="width: calc(100% - 105px)">
+        <input type="hidden" id="node-input-deviceNameT" class="node-typed-input-property-type">
+    </div>
+    -->
+
+    <div class="form-row for-device for-virtdev">
+        <label for="node-input-deviceType">deviceType</label>
+        <input type="text" id="node-input-deviceType" class="node-typed-input-property-value" style="width: calc(100% - 105px)">
+        <input type="hidden" id="node-input-deviceTypeT" class="node-typed-input-property-type">
+    </div>
+
+    <div class="form-row for-device for-virtdev">
+        <label for="node-input-channel">channel</label>
+        <input type="text" id="node-input-channel" class="node-typed-input-property-value" style="width: calc(100% - 105px)">
+        <input type="hidden" id="node-input-channelT" class="node-typed-input-property-type">
+    </div>
+
+    <!--
+    <div class="form-row for-device for-virtdev">
+        <label for="node-input-channelName">channelName</label>
+        <input type="text" id="node-input-channelName" class="node-typed-input-property-value" style="width: calc(100% - 105px)">
+        <input type="hidden" id="node-input-channelNameT" class="node-typed-input-property-type">
+    </div>
+    -->
+
+    <div class="form-row for-device for-virtdev">
+        <label for="node-input-channelType">channelType</label>
+        <input type="text" id="node-input-channelType" class="node-typed-input-property-value" style="width: calc(100% - 105px)">
+        <input type="hidden" id="node-input-channelTypeT" class="node-typed-input-property-type">
+    </div>
+
+    <div class="form-row for-device for-virtdev">
+        <label for="node-input-channelType">channelIndex</label>
+        <input type="text" id="node-input-channelIndex" class="node-typed-input-property-value" style="width: calc(100% - 105px)">
+        <input type="hidden" id="node-input-channelIndexT" class="node-typed-input-property-type">
+    </div>
+
+    <div class="form-row for-device for-virtdev">
+        <label for="node-input-datapoint">datapoint</label>
+        <input type="text" id="node-input-datapoint" class="node-typed-input-property-value" style="width: calc(100% - 105px)">
+        <input type="hidden" id="node-input-datapointT" class="node-typed-input-property-type">
+    </div>
+
+    <div class="form-row for-program">
+        <label for="node-input-program">program</label>
+        <input type="text" id="node-input-program" class="node-typed-input-property-value" style="width: calc(100% - 105px)">
+        <input type="hidden" id="node-input-programT" class="node-typed-input-property-type">
+    </div>
+
+    <!--
+    <div class="form-row for-program">
+        <label for="node-input-programName">programName</label>
+        <input type="text" id="node-input-programName" class="node-typed-input-property-value" style="width: calc(100% - 105px)">
+        <input type="hidden" id="node-input-programNameT" class="node-typed-input-property-type">
+    </div>
+    -->
+
+    <div class="form-row for-sysvar">
+        <label for="node-input-sysvar">sysvar</label>
+        <input type="text" id="node-input-sysvar" class="node-typed-input-property-value" style="width: calc(100% - 105px)">
+        <input type="hidden" id="node-input-sysvarT" class="node-typed-input-property-type">
+    </div>
+
+    <!--
+    <div class="form-row for-sysvar">
+        <label for="node-input-sysvarName">sysvarName</label>
+        <input type="text" id="node-input-sysvarName" class="node-typed-input-property-value" style="width: calc(100% - 105px)">
+        <input type="hidden" id="node-input-sysvarNameT" class="node-typed-input-property-type">
+    </div>
+    -->
+
+    <div class="form-row">
+        <label for="node-input-change"> </label>
+        <input type="checkbox" id="node-input-change" style="width: 22px; vertical-align: top;">
+        <span data-i18n="@ptweety/node-red-contrib-ccu-jack/messages:value.label.change"></span>
+    </div>
+
+    <div class="form-row">
+        <label for="node-input-cache"> </label>
+        <input type="checkbox" id="node-input-cache" style="width: 22px; vertical-align: top;">
+        <span data-i18n="@ptweety/node-red-contrib-ccu-jack/messages:value.label.cache"></span>
+    </div>
+
+    <div class="form-tips" style="max-width: unset; width: calc(100% - 18px)">
+        <b>Important:</b> deploy server node to get devices list
+    </div>
+</script>
+
+<script type="text/javascript">
+(function () {
+    'use strict';
+
+    RED.nodes.registerType('jack-value', {
+        category: 'Jack',
+        color: '#a6bbcf',
+        defaults: {
+            name: { value: '' },
+            jack: { value: 'localhost', type: 'jack-config', required: true },
+            domain: { value: '*' },
+            topic: { value: '*' },
+            interfaceType: { value: '' },
+            interfaceTypeT: { value: 'str' },
+            room: { value: '' },
+            roomT: { value: 'str' },
+            function: { value: '' },
+            functionT: { value: 'str' },
+            device: { value: '' },
+            deviceT: { value: 'str' },
+            // deviceName: { value: '' },
+            // deviceNameT: { value: 'str' },
+            deviceType: { value: '' },
+            deviceTypeT: { value: 'str' },
+            channel: { value: '' },
+            channelT: { value: 'str' },
+            // channelName: { value: '' },
+            // channelNameT: { value: 'str' },
+            channelType: { value: '' },
+            channelTypeT: { value: 'str' },
+            channelIndex: { value: '' },
+            channelIndexT: { value: 'str' },
+            datapoint: { value: '' },
+            datapointT: { value: 'str' },
+            program: { value: '' },
+            programT: { value: 'str' },
+            // programName: { value: '' },
+            // programNameT: { value: 'str' },
+            sysvar: { value: '' },
+            sysvarT: { value: 'str' },
+            // sysvarName: { value: '' },
+            // sysvarNameT: { value: 'str' },
+            change: { value: false },
+            cache: { value: false },
+        },
+        align: 'left',
+        icon: 'bridge.png',
+        inputs: 0,
+        outputs: 1,
+        label: function () {
+            return this.name || this._('@ptweety/node-red-contrib-ccu-jack/messages:value.label.name');
+        },
+        paletteLabel: function () {
+            return this._('@ptweety/node-red-contrib-ccu-jack/messages:value.label.name');
+        },
+        outputLabels: function (_) {
+            return this._('@ptweety/node-red-contrib-ccu-jack/messages:value.node.output');
+        },
+        oneditprepare: function () {
+            const $nodeInputJack = $('#node-input-jack');
+            const $nodeInputDomain = $('#node-input-domain');
+            const $nodeInputTopic = $('#node-input-topic');
+
+            $nodeInputTopic.autoComplete({
+                delay: 0,
+                minLength: 0,
+                search: function () {
+                    return [
+                        '*',
+                        '${domain}/status/${device}/${channelIndex}/${datapoint}',
+                        '${domain}/status/${program}',
+                        '${domain}/status/${sysvar}',
+                    ].map((value) => {
+                        return { value, label: value };
+                    });
+                },
+            });
+
+            let timerSetDomainOptions;
+            const setDomainOptions = () => {
+                if (timerSetDomainOptions !== null) clearTimeout(timerSetDomainOptions);
+
+                timerSetDomainOptions = setTimeout(() => {
+                    const nodeId = $nodeInputJack.val();
+
+                    if (nodeId === '_ADD_') return;
+
+                    $nodeInputDomain.empty().append('<option value="">*</option>');
+                    $.getJSON(`jack?config=${nodeId}&type=domain`, (data) => {
+                        for (const index of Object.keys(data)) {
+                            $nodeInputDomain.append(
+                                '<option value="' +
+                                    index +
+                                    (index === this.domain ? '" selected>' : '">') +
+                                    data[index].title +
+                                    '</option>'
+                            );
+                        }
+                    });
+                }, 100);
+            };
+
+            let timerRefreshFormRows;
+            const refreshFormRows = () => {
+                const domain = $nodeInputDomain.val() === null ? this.domain : $nodeInputDomain.val();
+
+                if (timerRefreshFormRows !== null) clearTimeout(timerRefreshFormRows);
+
+                timerRefreshFormRows = setTimeout(() => {
+                    $('.form-row').each(function () {
+                        for (const item of ['device', 'program', 'sysvar', 'virtdev']) {
+                            if ($(this).hasClass(`for-${item}`)) $(this).hide();
+                        }
+                        if ($(this).hasClass(`for-${domain}`)) $(this).show();
+                    });
+                }, 100);
+            };
+
+            let deviceTree = { room: [], function: [], device: [] };
+            let timerRefreshDeviceTree;
+            const getDeviceTree = () => {
+                const nodeId = $nodeInputJack.val();
+
+                if (nodeId === '_ADD_') return;
+
+                const queryItems = {};
+                for (const item of [
+                    'interfaceType',
+                    'room',
+                    'function',
+                    'device',
+                    'deviceType',
+                    'channel',
+                    'channelType',
+                    'channelIndex',
+                    'datapoint',
+                ]) {
+                    queryItems[item] = $(`#node-input-${item}`).val();
+                    queryItems[item + 'T'] = $(`#node-input-${item}T`).val();
+                }
+
+                $.getJSON(`jack?config=${nodeId}&type=tree&domain=${$('#node-input-domain').val()}`, queryItems).done(
+                    (data) => {
+                        deviceTree = data;
+                    }
+                );
+            };
+
+            const refreshDeviceTree = () => {
+                if (timerRefreshDeviceTree !== null) clearTimeout(timerRefreshDeviceTree);
+
+                timerRefreshDeviceTree = setTimeout(() => {
+                    getDeviceTree();
+                }, 100);
+            };
+
+            $nodeInputJack.on('change', (/* event, type, value */) => {
+                setDomainOptions();
+                refreshFormRows();
+            });
+
+            $nodeInputDomain.on('change', (/* event, type, value */) => {
+                refreshDeviceTree();
+                refreshFormRows();
+                $nodeInputTopic.trigger('focus');
+            });
+
+            $('.node-typed-input-property-value').each(function () {
+                const nodeId = $nodeInputJack.val();
+                const id = $(this).attr('id');
+
+                switch (id) {
+                    case 'node-input-program':
+                    case 'node-input-sysvar': {
+                        const type = id.slice(11);
+                        const url = 'jack?config=' + nodeId + '&type=' + type;
+
+                        $.getJSON(url, (data) => {
+                            $(this).typedInput({
+                                type: 'str',
+                                types: [
+                                    {
+                                        value: 'str',
+                                        label: 'string',
+                                        icon: 'red/images/typedInput/az.svg',
+                                        autoComplete: function () {
+                                            return [{ value: '', label: '*' }, ...data];
+                                        },
+                                    },
+                                    { value: 're', label: 'regular expression', icon: 'red/images/typedInput/re.svg' },
+                                ],
+                                typeField: '#' + id + 'T',
+                            });
+                        });
+
+                        break;
+                    }
+
+                    default: {
+                        const type = id.slice(11);
+                        $(this).typedInput({
+                            types: [
+                                {
+                                    value: 'str',
+                                    label: 'string',
+                                    icon: 'red/images/typedInput/az.svg',
+                                    autoComplete: function () {
+                                        return deviceTree[type]
+                                            ? [{ value: '', label: '*' }, ...deviceTree[type]]
+                                            : [{ value: '', label: '*' }];
+                                    },
+                                },
+                                { value: 're', label: 'regular expression', icon: 'red/images/typedInput/re.svg' },
+                            ],
+                            typeField: '#' + $(this).attr('id') + 'T',
+                        });
+                    }
+                }
+            });
+
+            $('.node-typed-input-property-value').on('change', (/* event, type, value */) => {
+                refreshDeviceTree();
+            });
+        },
+        oneditsave: function () {
+            const $nodeInputDomain = $('#node-input-domain');
+            const domain = $nodeInputDomain.val() || '';
+
+            $('.node-typed-input-property-value').each(function () {
+                if (!$(this).parent().hasClass(`for-${domain}`)) {
+                    $(this).typedInput('type', 'str');
+                    $(this).typedInput('value', '');
+                }
+            });
+        },
+    });
+})();
+</script>

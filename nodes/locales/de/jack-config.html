@@ -1,0 +1,23 @@
+<script type="text/markdown" data-help-name="jack-config">
+Konfiguration der Verbindung zu einem CCU-Jack.
+
+Diese Konfiguration erstellt eine einzelne Verbindung zu einem CCU-Jack, welche anschließend von den `Jack Bridge` und `Jack Value` Nodes verwendet wird.
+
+### Setup
+
+: Server (string) : `IP` oderr `hostname` des CCU-Jack
+: Port (number) : `2121` (http) <br> `2122` (https)
+: Sichere Verbindung (SSL/TLS) aktivieren (checkbox) :
+: Basis-Authentifizierung verwenden (checkbox) : 
+
+### Details
+
+`Server` und `Port` sind gemäß der eigenen Umgebung zu wählen. Gewöhnlich stellt CCU-Jack seine API entweder an Port *2121* (http) oder *2122* (https) zur Verfügung.
+
+Sofern benötigt, sind SSL/TLS und/oder Authentifizierung einzustellen.
+
+### Verweise
+
+- [MQTT Server](https://github.com/mdzio/ccu-jack/wiki/MQTT-Server)
+
+</script>

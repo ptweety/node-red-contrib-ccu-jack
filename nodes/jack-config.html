@@ -1,0 +1,187 @@
+<script type="text/html" data-template-name="jack-config">
+    <style>
+        .separator {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+    
+        .separator::before,
+        .separator::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid var(--red-ui-tertiary-border-color);
+        }
+    
+        .separator:not(:empty)::before {
+            margin-right: 1.25em;
+        }
+    
+        .separator:not(:empty)::after {
+            margin-left: 1.25em;
+        }
+    </style>
+    <div class="form-row">
+        <label for="node-config-input-name"><i class="fa fa-tag"></i> <span data-i18n="@ptweety/node-red-contrib-ccu-jack/messages:common.label.name"></span></label>
+        <input type="text" id="node-config-input-name" data-i18n="[placeholder]@ptweety/node-red-contrib-ccu-jack/messages:config.input.name" style="width: calc(100% - 105px)">
+    </div>
+
+    <div class="separator">VEAP</div>
+
+    <div class="form-row">
+        <label for="node-config-input-host"><i class="fa fa-globe"></i> <span data-i18n="@ptweety/node-red-contrib-ccu-jack/messages:config.label.server"></span></label>
+        <input type="text" id="node-config-input-host" placeholder="ccu-jack" style="width: calc(100% - 235px)">
+        <label for="node-config-input-port" style="margin-left:25px; width: 42px"> <span data-i18n="@ptweety/node-red-contrib-ccu-jack/messages:config.label.port"></span></label>
+        <input type="text" id="node-config-input-port" placeholder="2121" style="width: 55px">
+    </div>
+	<div class="form-row">
+        <input type="checkbox" id="node-config-input-usetls" style="height: 20px; margin: 0 5px 0 104px; display: inline-block; width: auto; vertical-align: top;">
+        <label for="node-config-input-usetls" style="width: auto"><span data-i18n="@ptweety/node-red-contrib-ccu-jack/messages:config.label.use-tls"></span></label>
+        <div id="node-config-row-usetls" class="hide" style="margin: 0 0 0 104px">
+            <span id="node-config-row-tls">
+                <input type="text" id="node-config-input-tls" style="width: 100%;">
+            </span>
+        </div>
+    </div>
+    <div class="form-row">
+        <input type="checkbox" id="node-config-input-useauth" style="height: 20px; margin: 0 5px 0 104px; display: inline-block; width: auto; vertical-align: top">
+        <label for="node-config-input-useauth" style="width: auto" data-i18n="@ptweety/node-red-contrib-ccu-jack/messages:config.label.use-auth"></label>
+        <div id="node-config-row-useauth" class="hide" style="margin: 0 0 0 104px">
+            <div class="form-row">
+                <label style="width: 125px; margin-left: 20px" for="node-config-input-user"><i class="fa fa-user"></i> <span data-i18n="@ptweety/node-red-contrib-ccu-jack/messages:common.label.username"></span></label>
+                <input type="text" id="node-config-input-user" style="width: calc(100% - 149px)">
+            </div>
+            <div class="form-row">
+                <label style="width: 125px; margin-left: 20px" for="node-config-input-password"> <i class="fa fa-lock"></i> <span data-i18n="@ptweety/node-red-contrib-ccu-jack/messages:common.label.password"></span></label>
+                <input type="password" id="node-config-input-password" style="width: calc(100% - 149px)">
+            </div>
+        </div>
+    </div>
+	<div class="form-tips" style="max-width: unset; width: calc(100% - 18px)">
+		<b>Important:</b> CCU-Jack >= v2.4.0 required
+	</div>
+</script>
+
+<script type="text/javascript">
+(function () {
+    'use strict';
+
+    RED.nodes.registerType('jack-config', {
+        category: 'config',
+        color: '#c7d8d8',
+        defaults: {
+            name: { value: '', required: false },
+            host: { value: '', required: true },
+            port: {
+                value: 2121,
+                required: true,
+                validate: RED.validators.number(),
+            },
+
+            useauth: { value: false },
+            usetls: { value: false },
+            tls: { type: 'tls-config', required: false },
+
+            contextStore: { value: {} },
+        },
+        credentials: {
+            user: { type: 'text' },
+            password: { type: 'password' },
+        },
+        icon: 'cog.png',
+        label: function () {
+            return this.name || this.host;
+        },
+        paletteLabel: function () {
+            return this._('@ptweety/node-red-contrib-ccu-jack/messages:config.label.name');
+        },
+        labelStyle: function () {
+            return this.name ? 'node_label_italic' : '';
+        },
+        oneditprepare: function () {
+            const $nodeConfigInputName = $('#node-config-input-name');
+            const $nodeConfigInputHost = $('#node-config-input-host');
+            // const $nodeConfigInputPort = $('#node-config-input-port');
+
+            $.getJSON('jack', (data) => {
+                const discovered = [];
+                for (const ccu of data.discover) {
+                    discovered.push({ label: ccu.address + ' ' + ccu.serial, value: ccu.address });
+                }
+
+                $nodeConfigInputHost.autocomplete({
+                    source: discovered,
+                    delay: 0,
+                    minLength: 0,
+                    select: function (_, ui) {
+                        const label = ui.item.label.split(' ').pop();
+                        $nodeConfigInputName.val(label);
+                    },
+                });
+            });
+            setTimeout(() => {
+                if (!this.host) {
+                    $nodeConfigInputHost.trigger('focus');
+                }
+            }, 250);
+
+            const $nodeConfigInputUseauth = $('#node-config-input-useauth');
+            if (this.useauth === undefined) {
+                this.useauth = false;
+                $nodeConfigInputUseauth.prop('checked', false);
+            }
+
+            function updateAuthOptions() {
+                if ($nodeConfigInputUseauth.is(':checked')) {
+                    $('#node-config-row-useauth').show();
+                } else {
+                    $('#node-config-row-useauth').hide();
+                }
+            }
+            if (this.credentials.user || this.credentials.password) {
+                $nodeConfigInputUseauth.prop('checked', true);
+            } else {
+                $nodeConfigInputUseauth.prop('checked', false);
+            }
+            updateAuthOptions();
+            $nodeConfigInputUseauth.on('click', updateAuthOptions);
+
+            const $nodeConfigInputUsetls = $('#node-config-input-usetls');
+            if (this.usetls === undefined) {
+                this.usetls = false;
+                $nodeConfigInputUsetls.prop('checked', false);
+            }
+
+            function updateTLSOptions() {
+                if ($nodeConfigInputUsetls.is(':checked')) {
+                    $('#node-config-row-usetls').show();
+                } else {
+                    $('#node-config-row-usetls').hide();
+                }
+            }
+            if (this.tls) {
+                $nodeConfigInputUsetls.prop('checked', true);
+            } else {
+                $nodeConfigInputUsetls.prop('checked', false);
+            }
+            updateTLSOptions();
+            $nodeConfigInputUsetls.on('click', updateTLSOptions);
+
+            // if (this.qos === undefined) {
+            // 	$('#node-input-qos').val('2');
+            // }
+        },
+        oneditsave: function () {
+            if (!$('#node-config-input-useauth').is(':checked')) {
+                $('#node-config-input-user').val('');
+                $('#node-config-input-password').val('');
+            }
+
+            if (!$('#node-config-input-usetls').is(':checked')) {
+                $('#node-config-input-tls').val('_ADD_');
+            }
+        },
+    });
+})();
+</script>

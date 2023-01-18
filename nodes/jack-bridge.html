@@ -1,0 +1,44 @@
+<script type="text/html" data-template-name="jack-bridge">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="@ptweety/node-red-contrib-ccu-jack/messages:common.label.name"></span></label>
+        <input type="text" id="node-input-name" data-i18n="[placeholder]@ptweety/node-red-contrib-ccu-jack/messages:bridge.input.name" style="width: calc(100% - 105px)">
+    </div>
+
+    <div class="form-row">
+        <label for="node-input-jack"><i class="fa fa-globe"></i> <span data-i18n="@ptweety/node-red-contrib-ccu-jack/messages:config.label.name"></span></label>
+        <input type="text" id="node-input-jack" style="width: calc(100% - 105px)">
+    </div>
+</script>
+
+<script type="text/javascript">
+(function () {
+    'use strict';
+
+    RED.nodes.registerType('jack-bridge', {
+        category: 'Jack',
+        color: '#b7b7b7',
+        defaults: {
+            name: { value: '' },
+            jack: { value: 'localhost', type: 'jack-config', required: true },
+        },
+        align: 'left',
+        icon: 'bridge.png',
+        inputs: 1,
+        outputs: 2,
+        label: function () {
+            return this.name || this._('@ptweety/node-red-contrib-ccu-jack/messages:bridge.label.name');
+        },
+        paletteLabel: function () {
+            return this._('@ptweety/node-red-contrib-ccu-jack/messages:bridge.label.name');
+        },
+        inputLabels: function () {
+            return this._('@ptweety/node-red-contrib-ccu-jack/messages:bridge.node.input');
+        },
+        outputLabels: function (index) {
+            return this._(`@ptweety/node-red-contrib-ccu-jack/messages:bridge.node.output${index}`);
+        },
+        oneditprepare: function () {},
+        oneditsave: function () {},
+    });
+})();
+</script>

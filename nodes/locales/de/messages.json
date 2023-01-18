@@ -1,0 +1,75 @@
+{
+    "common": {
+        "label": {
+            "payload": "Nutzdaten (Payload)",
+            "topic": "Topic",
+            "name": "Name",
+            "username": "Benutzername",
+            "password": "Passwort",
+            "property": "Eigenschaft"
+        },
+        "status": {
+            "connected": "Verbunden",
+            "not-connected": "Nicht verbunden ",
+            "disconnected": "Verbindung getrennt",
+            "connecting": "Verbindung wird hergestellt",
+            "error": "Fehler",
+            "ok": "OK"
+        },
+        "notification": {
+            "error": "<strong>Fehler</strong>: __message__",
+            "errors": {
+                "no-response": "Keine Antwort vom Server",
+                "unexpected": "Unerwarteter Fehler (__status__) __message__"
+            }
+        },
+        "errors": {}
+    },
+    "config": {
+		"label": {
+			"name": "Jack Config",
+			"server": "Server",
+            "port": "Port",
+            "use-tls": "Sichere Verbindung (SSL/TLS) aktivieren",
+            "use-auth": "Basis-Authentifizierung verwenden"
+		},
+        "input": {
+            "name": "Jack Config Name",
+			"server": "z.B. localhost | 127.0.0.1 | ip"
+        }
+	},
+    "bridge": {
+		"label": {
+			"name": "Jack Bridge",
+			"missing-ip": "Missing Bridge IP…",
+			"disable-events": "Disable events",
+			"unknown-error": "Something went wrong. Please retry.",
+			"invalid": "Sorry. Your selected Bridge is invalid: ",
+			"connecting": "Connecting with the bridge…"
+		},
+		"input": {
+			"name": "Jack Bridge Name",
+			"statusmsg": "Statusabfrage erfolgreich…"
+		},
+        "node": {
+            "input": "Einstellungen / Abfragen",
+			"output0": "Bridge Information",
+            "output1": "MQTT connection"
+        }
+	},
+    "value": {
+		"label": {
+			"name": "Jack Value",
+            "change": "Nur geänderte Werte ausgeben",
+            "cache": "Beim Start letzten bekannten Wert ausgeben"
+		},
+		"input": {
+			"name": "Jack Value Name",
+            "topic": "Vorlage, z.B. ${domain}"
+		},
+        "node": {
+            "input": "Einstellungen / Abfragen",
+			"output": "Ausgabe"
+        }
+	}
+}

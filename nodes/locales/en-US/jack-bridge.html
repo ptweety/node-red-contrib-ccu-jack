@@ -1,0 +1,44 @@
+<script type="text/markdown" data-help-name="jack-bridge">
+Integration of a `MQTT In` Node with the `Jack` Nodes.
+
+### Setup
+
+: Jack Config (select) : the Jack-Configuration to be used.
+
+### Inputs
+
+Different types of messages can be processed:
+
+#### Configuration
+
+: action (string) : the name of the action the node should perform. Available actions are `"connect"`, `"disconnect"`, `"subscribe"` and `"unsubscribe"`.
+: topic (string|object|array) : required for the `"subscribe"` and `"unsubscribe"` actions. <br> A string `#` or JSON object `["#"]` subscribes to anything! <br> See the `MQTT In` Node documentation.
+
+#### MQTT messages
+
+: topic (string) : the MQTT topic, uses / as a hierarchy separator.
+: payload (string|json) : a string or JSON object.
+: qos (number) : `0` fire and forget <br> `1` at least once <br> `2` once and once only.
+: retain (boolean) : `true` indicates the message was retained and may be old.
+
+#### Status
+
+: payload (boolean) : returns the current status of the `Jack Bridge` Node. <br> **Not yet implemented!**
+
+### Outputs
+
+1. Bridge Information
+: status (object) : **Not yet implemented!**
+
+2. MQTT Connection
+: action (string) : the name of the action the node should perform.
+: topic (string|object|array) : required for the `"subscribe"` and `"unsubscribe"` actions.
+
+The later forwards the Configuration message to a `MQTT In` Node.
+
+### Details
+
+The linked `MQTT In` Node should be configured as follows:
+- **Action**: *Dynamic subscription*
+- **Output**: *auto-detect (parsed JSON-Objekt, ...)*
+</script>
