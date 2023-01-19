@@ -1,0 +1,6 @@
+{
+    "template": "compact",
+    "hideCredit": true,
+    "sortCommits": "date-desc",
+    "commitLimit": false
+}

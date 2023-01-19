@@ -52,6 +52,7 @@
   },
   "devDependencies": {
     "@types/jest": "29.2.6",
+    "auto-changelog": "2.4.0",
     "axios-mock-adapter": "1.21.2",
     "eslint": "8.32.0",
     "eslint-config-prettier": "8.6.0",
