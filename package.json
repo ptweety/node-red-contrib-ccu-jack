@@ -25,7 +25,9 @@
     "start": "node ./node_modules/node-red/red.js -s ./.node-red/settings.js -u ./.node-red",
     "test": "jest",
     "watch:test": "jest --watchAll",
-    "update": "npx npm-check-updates -u && npm install"
+    "update": "npx npm-check-updates -u && npm install",
+    "version": "auto-changelog -p && git add CHANGELOG.md",
+    "postversion": "git push origin --all && git push origin --no-verify --tags"
   },
   "keywords": [
     "node-red",
