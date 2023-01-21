@@ -34,7 +34,7 @@
             "use-auth": "Basis-Authentifizierung verwenden"
 		},
         "input": {
-            "name": "Jack Config Name",
+            "name": "Name",
 			"server": "z.B. localhost | 127.0.0.1 | ip"
         }
 	},
@@ -48,7 +48,7 @@
 			"connecting": "Connecting with the bridge…"
 		},
 		"input": {
-			"name": "Jack Bridge Name",
+			"name": "Name",
 			"statusmsg": "Statusabfrage erfolgreich…"
 		},
         "node": {
@@ -57,14 +57,14 @@
             "output1": "MQTT connection"
         }
 	},
-    "value": {
+    "event": {
 		"label": {
-			"name": "Jack Value",
+			"name": "Jack Event",
             "change": "Nur geänderte Werte ausgeben",
             "cache": "Beim Start letzten bekannten Wert ausgeben"
 		},
 		"input": {
-			"name": "Jack Value Name",
+			"name": "Name",
             "topic": "Vorlage, z.B. ${domain}"
 		},
         "node": {

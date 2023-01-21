@@ -12,7 +12,7 @@
     "nodes": {
       "jack-config": "nodes/jack-config.js",
       "jack-bridge": "nodes/jack-bridge.js",
-      "jack-value": "nodes/jack-value.js",
+      "jack-event": "nodes/jack-event.js",
       "messages": "nodes/messages.js"
     }
   },

@@ -6,7 +6,7 @@ const nodeConfig = {
     /** @type {runtimeRED} Reference to the master RED instance */
     RED: undefined,
     /** @type {string} Node Name - has to match with html file and package.json `red` section */
-    nodeName: 'jack-value',
+    nodeName: 'jack-event',
 };
 
 function nodeInstance(config) {

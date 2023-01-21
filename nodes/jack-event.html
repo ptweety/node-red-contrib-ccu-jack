@@ -1,9 +1,9 @@
-<script type="text/html" data-template-name="jack-value">
+<script type="text/html" data-template-name="jack-event">
     <div class="form-row">
         <label for="node-input-name">
             <i class="fa fa-tag"></i> <span data-i18n="@ptweety/node-red-contrib-ccu-jack/messages:common.label.name"></span>
         </label>
-        <input type="text" id="node-input-name" data-i18n="[placeholder]@ptweety/node-red-contrib-ccu-jack/messages:value.input.name" style="width: calc(100% - 105px)">
+        <input type="text" id="node-input-name" data-i18n="[placeholder]@ptweety/node-red-contrib-ccu-jack/messages:event.input.name" style="width: calc(100% - 105px)">
     </div>
 
     <div class="form-row">
@@ -17,7 +17,7 @@
         <label for="node-input-topic">
             <i class="fa fa-tasks"></i> <span data-i18n="@ptweety/node-red-contrib-ccu-jack/messages:common.label.topic"></span>
         </label>
-        <input type="text" id="node-input-topic" data-i18n="[placeholder]@ptweety/node-red-contrib-ccu-jack/messages:value.input.topic" style="width: calc(100% - 105px)">
+        <input type="text" id="node-input-topic" data-i18n="[placeholder]@ptweety/node-red-contrib-ccu-jack/messages:event.input.topic" style="width: calc(100% - 105px)">
     </div>
 
     <div class="form-row">
@@ -126,13 +126,13 @@
     <div class="form-row">
         <label for="node-input-change"> </label>
         <input type="checkbox" id="node-input-change" style="width: 22px; vertical-align: top;">
-        <span data-i18n="@ptweety/node-red-contrib-ccu-jack/messages:value.label.change"></span>
+        <span data-i18n="@ptweety/node-red-contrib-ccu-jack/messages:event.label.change"></span>
     </div>
 
     <div class="form-row">
         <label for="node-input-cache"> </label>
         <input type="checkbox" id="node-input-cache" style="width: 22px; vertical-align: top;">
-        <span data-i18n="@ptweety/node-red-contrib-ccu-jack/messages:value.label.cache"></span>
+        <span data-i18n="@ptweety/node-red-contrib-ccu-jack/messages:event.label.cache"></span>
     </div>
 
     <div class="form-tips" style="max-width: unset; width: calc(100% - 18px)">
@@ -144,7 +144,7 @@
 (function () {
     'use strict';
 
-    RED.nodes.registerType('jack-value', {
+    RED.nodes.registerType('jack-event', {
         category: 'Jack',
         color: '#a6bbcf',
         defaults: {
@@ -190,13 +190,13 @@
         inputs: 0,
         outputs: 1,
         label: function () {
-            return this.name || this._('@ptweety/node-red-contrib-ccu-jack/messages:value.label.name');
+            return this.name || this._('@ptweety/node-red-contrib-ccu-jack/messages:event.label.name');
         },
         paletteLabel: function () {
-            return this._('@ptweety/node-red-contrib-ccu-jack/messages:value.label.name');
+            return this._('@ptweety/node-red-contrib-ccu-jack/messages:event.label.name');
         },
         outputLabels: function (_) {
-            return this._('@ptweety/node-red-contrib-ccu-jack/messages:value.node.output');
+            return this._('@ptweety/node-red-contrib-ccu-jack/messages:event.node.output');
         },
         oneditprepare: function () {
             const $nodeInputJack = $('#node-input-jack');
