@@ -1,22 +1,22 @@
 <script type="text/markdown" data-help-name="jack-event">
-Gibt empfangene MQTT Nachrichten angereichter mit Daten des CCU-Jack aus.
+Forwards MQTT messages enriched with CCU-Jack data.
 
 ### Setup
 
-: Jack Config (select) : Die zu verwendende Jack-Konfiguration.
-: topic (string) : `msg.topic` ausgehender Nachrichten. Kann mit Platzhaltern konfiguriert werden. `*` nutzt das ursprüngliche `topic`.
-: domain (select) : Der Bereich (unter root des CCU-Jack) unter welchem die gewüschten Geräte geführt werden. `*` erlaubt Events aller Bereiche.
-: interfaceType (string|regexp) : Die Schnittstelle über welche die gewüschten Geräte angebunden sind. `*` erlaubt Events aller verbundenen Schnittstellen.
-: room (string|regexp) : Raum Filter, z.B. `1234` für `Flur`.
-: function (string|regexp) : Gewerk Filter, z.B. `1212` für `Licht`.
-: device (string|regexp) : Die Seriennummer des Geräts, z.B. `0009156999C7DB`.
-: deviceType (string|regexp) : Die Typen-Bezeichnung des Geräts, z.B. `HmIP-SMI`.
-: channel (string|regexp) : Die Kanaladresse bestehend aus Serien- und Kanalnummer, z.B. <code>0009156999C7DB&#58;0</code>.
-: channelType (string|regexp) : Der Typ des Kanals, z.B. `MAINTENANCE`.
-: channelIndex (string|regexp) : Der Index des Kanals, z.B. `0`.
-: datapoint (string|regexp) : Der Datenpunkt des Kanals, z.B. `RSSI_PEER`.
-: Nur geänderte Werte ausgeben (checkbox) : Ein Event wird nur dann erzeugt, wenn sich der Wert seit dem letzten Event verändert hat.
-: Beim Start letzten bekannten Wert ausgeben (checkbox) : Wenn Node-RED gestartet wird, dann wird der letzte Wert (sofern bekannt) ausgegeben.
+: Jack Config (select) : Jack-Config to use.
+: topic (string) : `msg.topic` of outgoing messages. Can be configured with wildcards. `*` reuses the original `topic`.
+: domain (select) : the domain (under root of the CCU-Jack) which the desired devices are listed. `*` allows events of all domains.
+: interfaceType (string|regexp) : type of interfaces via which the desired devices are connected. `*` allows events from all interface types.
+: room (string|regexp) : room filter, e.g. `1234` for `Corridor`.
+: function (string|regexp) : function filter, e.g. `1212` for `Light`.
+: device (string|regexp) : serial number of the device, e.g. `0009156999C7DB`.
+: deviceType (string|regexp) : type of the device, e.g. `HmIP-SMI`.
+: channel (string|regexp) : channel address consisting of serial and channel number, e.g. <code>0009156999C7DB&#58;0</code>.
+: channelType (string|regexp) : type of the channel, e.g. `MAINTENANCE`.
+: channelIndex (string|regexp) : index of the channel, e.g. `0`.
+: datapoint (string|regexp) : datapoint of the channel, e.g. `RSSI_PEER`.
+: Emit only changed values (checkbox) : an event will only be emitted if and only if the value has changed.
+: Emit cached value on start (checkbox) : on (re-)start of Node-RED, the last value (if known) is emitted.
 
 
 ### Ausgangsdaten
