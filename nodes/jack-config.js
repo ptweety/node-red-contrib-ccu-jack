@@ -643,18 +643,7 @@ function nodeInstance(config) {
                     filter[attribute] = Number.parseInt(filter[attribute], 10);
                 }
 
-                if (typeof additions[attribute] === 'object') {
-                    if (filter[attribute] instanceof RegExp) {
-                        match = false;
-                        for (const item of Object.keys(additions[attribute])) {
-                            if (filter[attribute].test(item) || filter[attribute].test(additions[attribute][item])) {
-                                match = true;
-                            }
-                        }
-                    } else if (!hasProperty(additions[attribute], filter[attribute])) {
-                        match = false;
-                    }
-                } else if (Array.isArray(additions[attribute])) {
+                if (Array.isArray(additions[attribute])) {
                     if (filter[attribute] instanceof RegExp) {
                         match = false;
                         for (const item of additions[attribute]) {
@@ -663,6 +652,17 @@ function nodeInstance(config) {
                             }
                         }
                     } else if (!additions[attribute].includes(filter[attribute])) {
+                        match = false;
+                    }
+                } else if (typeof additions[attribute] === 'object') {
+                    if (filter[attribute] instanceof RegExp) {
+                        match = false;
+                        for (const item of Object.keys(additions[attribute])) {
+                            if (filter[attribute].test(item) || filter[attribute].test(additions[attribute][item])) {
+                                match = true;
+                            }
+                        }
+                    } else if (!hasProperty(additions[attribute], filter[attribute])) {
                         match = false;
                     }
                 } else if (filter[attribute] instanceof RegExp) {

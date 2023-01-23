@@ -22,7 +22,7 @@ function nodeInstance(config) {
 
     this.connected = false;
 
-    this.jack.register(this, async (message) => {
+    this.jack.register(this, (message) => {
         switch (message.topic) {
             case 'status': {
                 this.status(message.payload);
@@ -61,15 +61,10 @@ function nodeInstance(config) {
         }
 
         const attribute_ = attribute === 'room' || attribute === 'function' ? attribute + 's' : attribute;
-        this.filter[attribute_] =
-            config[attribute + 'T'] === 'strs'
-                ? new RegExp(config[attribute].replaceAll(',', '|'))
-                : config[attribute + 'T'] === 're'
-                ? new RegExp(config[attribute])
-                : config[attribute];
+        this.filter[attribute_] = config[attribute + 'T'] === 're' ? new RegExp(config[attribute]) : config[attribute];
     }
 
-    this.jack.subscribe(this, async (message) => {
+    this.jack.subscribe(this, (message) => {
         message.topic = config.topic === '*' ? message.topic : this.jack.topicReplace(config.topic, message);
         this.send(message);
     });
