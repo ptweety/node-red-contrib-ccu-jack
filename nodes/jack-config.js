@@ -825,7 +825,8 @@ function nodeInstance(config) {
 
                             if (
                                 (rqDeviceType.length === 0 || rqDeviceType.includes(deviceItem.type)) &&
-                                (rqInterfaceType.length === 0 || rqInterfaceType.includes(deviceItem.interfaceType))
+                                (rqInterfaceType.length === 0 || rqInterfaceType.includes(deviceItem.interfaceType)) &&
+                                (rqDevice.length === 0 || rqDevice.includes(device))
                             ) {
                                 let matchChannel = false;
 
@@ -842,65 +843,70 @@ function nodeInstance(config) {
                                     )
                                         continue;
 
-                                    if (rqChannelType.length === 0 || rqChannelType.includes(channelItem.type)) {
-                                        result.channelType.set(channelItem.type, {
-                                            value: channelItem.type,
-                                            label: channelItem.type,
-                                        });
+                                    if (
+                                        (rqChannelType.length === 0 || rqChannelType.includes(channelItem.type)) &&
+                                        (rqChannel.length === 0 || rqChannel.includes(device + ':' + channel))
+                                    ) {
+                                        let matchDatapoint = false;
 
-                                        if (rqChannel.length === 0 || rqChannel.includes(channel)) {
-                                            let matchDatapoint = false;
-                                            matchChannel = true;
+                                        for (const datapoint of Object.keys(
+                                            this.contextStore[rqDomain][device][channel]
+                                        )) {
+                                            const datapointItem =
+                                                this.contextStore[rqDomain][device][channel][datapoint]['.'];
+                                            if (datapoint === '.') continue;
 
-                                            for (const datapoint of Object.keys(
-                                                this.contextStore[rqDomain][device][channel]
-                                            )) {
-                                                const datapointItem =
-                                                    this.contextStore[rqDomain][device][channel][datapoint]['.'];
-                                                if (datapoint === '.') continue;
+                                            if (rqDatapoint.length === 0 || rqDatapoint.includes(datapoint)) {
+                                                matchDatapoint = true;
 
-                                                if (rqDatapoint.length === 0 || rqDatapoint.includes(datapoint)) {
-                                                    matchDatapoint = true;
-
-                                                    result.datapoint.set(datapointItem, {
-                                                        value: datapointItem.identifier,
-                                                        label: datapointItem.title,
-                                                    });
-                                                }
-                                            }
-
-                                            if (matchDatapoint) {
-                                                for (const room of channelItem.rooms) {
-                                                    const roomItem = this.contextStore['room'][room]['.'];
-
-                                                    result.room.set(roomItem.identifier, {
-                                                        value: roomItem.identifier,
-                                                        label: roomItem.identifier + ' - ' + roomItem.title,
-                                                    });
-                                                }
-
-                                                for (const function_ of channelItem.functions) {
-                                                    const functionItem = this.contextStore['function'][function_]['.'];
-
-                                                    result.function.set(functionItem.identifier, {
-                                                        value: functionItem.identifier,
-                                                        label: functionItem.identifier + ' - ' + functionItem.title,
-                                                    });
-                                                }
-
-                                                result.channel.set(channelItem.address, {
-                                                    value: channelItem.address,
-                                                    label: channelItem.address + ' - ' + channelItem.title,
+                                                result.datapoint.set(datapointItem.identifier, {
+                                                    value: datapointItem.identifier,
+                                                    label: datapointItem.identifier,
                                                 });
                                             }
                                         }
-                                    }
 
-                                    if (rqChannelIndex.length === 0 || rqChannelIndex.includes(channelItem.identifier))
-                                        result.channelIndex.set(channelItem.identifier, {
-                                            value: channelItem.identifier,
-                                            label: channelItem.identifier,
-                                        });
+                                        if (matchDatapoint) {
+                                            matchChannel = true;
+
+                                            for (const room of channelItem.rooms) {
+                                                const roomItem = this.contextStore['room'][room]['.'];
+
+                                                result.room.set(roomItem.identifier, {
+                                                    value: roomItem.identifier,
+                                                    label: roomItem.identifier + ' - ' + roomItem.title,
+                                                });
+                                            }
+
+                                            for (const function_ of channelItem.functions) {
+                                                const functionItem = this.contextStore['function'][function_]['.'];
+
+                                                result.function.set(functionItem.identifier, {
+                                                    value: functionItem.identifier,
+                                                    label: functionItem.identifier + ' - ' + functionItem.title,
+                                                });
+                                            }
+
+                                            result.channel.set(channelItem.address, {
+                                                value: channelItem.address,
+                                                label: channelItem.address + ' - ' + channelItem.title,
+                                            });
+
+                                            result.channelType.set(channelItem.type, {
+                                                value: channelItem.type,
+                                                label: channelItem.type,
+                                            });
+
+                                            if (
+                                                rqChannelIndex.length === 0 ||
+                                                rqChannelIndex.includes(channelItem.identifier)
+                                            )
+                                                result.channelIndex.set(channelItem.identifier, {
+                                                    value: channelItem.identifier,
+                                                    label: channelItem.identifier,
+                                                });
+                                        }
+                                    }
                                 }
 
                                 if (matchChannel) {
@@ -925,7 +931,13 @@ function nodeInstance(config) {
 
                         response
                             .status(200)
-                            .send(JSON.stringify(result, (_, v) => (v instanceof Map ? [...v.values()] : v)));
+                            .send(
+                                JSON.stringify(result, (_, v) =>
+                                    v instanceof Map
+                                        ? [...v.values()].sort((a, b) => a.value.localeCompare(b.value))
+                                        : v
+                                )
+                            );
                     } catch {
                         response.status(500).send(JSON.stringify({}));
                     }
