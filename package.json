@@ -13,6 +13,7 @@
       "jack-config": "nodes/jack-config.js",
       "jack-bridge": "nodes/jack-bridge.js",
       "jack-event": "nodes/jack-event.js",
+      "jack-value": "nodes/jack-value.js",
       "messages": "nodes/messages.js"
     }
   },

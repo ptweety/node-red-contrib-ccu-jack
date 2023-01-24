@@ -27,7 +27,7 @@
     },
     "config": {
 		"label": {
-			"name": "Jack Config",
+			"name": "jack config",
 			"server": "Server",
             "port": "Port",
             "use-tls": "Sichere Verbindung (SSL/TLS) aktivieren",
@@ -40,7 +40,7 @@
 	},
     "bridge": {
 		"label": {
-			"name": "Jack Bridge",
+			"name": "jack bridge",
 			"missing-ip": "Missing Bridge IP…",
 			"disable-events": "Disable events",
 			"unknown-error": "Something went wrong. Please retry.",
@@ -59,7 +59,22 @@
 	},
     "event": {
 		"label": {
-			"name": "Jack Event",
+			"name": "jack event",
+            "change": "Nur geänderte Werte ausgeben",
+            "cache": "Beim Start letzten bekannten Wert ausgeben"
+		},
+		"input": {
+			"name": "Name",
+            "topic": "Vorlage, z.B. ${domain}"
+		},
+        "node": {
+            "input": "Einstellungen / Abfragen",
+			"output": "Ausgabe"
+        }
+	},
+    "value": {
+		"label": {
+			"name": "jack value",
             "change": "Nur geänderte Werte ausgeben",
             "cache": "Beim Start letzten bekannten Wert ausgeben"
 		},
