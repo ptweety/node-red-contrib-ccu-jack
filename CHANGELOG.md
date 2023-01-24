@@ -2,8 +2,16 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v0.0.4](https://github.com/ptweety/node-red-contrib-ccu-jack/compare/v0.0.3...v0.0.4)
+
+- feat: add new jack-value node [`c156ab1`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/c156ab11591fdcadc78e7066e56f604d19f3e470)
+- refactor: internal event handling [`529873b`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/529873b5e8cf87c38b95bfe77caf629af20bd131)
+
 #### [v0.0.3](https://github.com/ptweety/node-red-contrib-ccu-jack/compare/v0.0.2...v0.0.3)
 
+> 23 January 2023
+
+- chore: bump version to 0.0.3 [`45e1eaa`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/45e1eaa9b5e6b7bf4c768ca34c6716ba8048f84a)
 - fix: minor code clean up [`98ea9c5`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/98ea9c536e947bd6136719d684160548c588d837)
 - fix: autoComplete filter wasn't corret [`8029f77`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/8029f77b215b6564dfec0cdbb45978b3f47e6cc5)
 - docs: play with colors and icons [`b89bdf7`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/b89bdf7cbf025fe8f9a5305f7cabbb40fc1fcfd0)
