@@ -1,6 +1,6 @@
 'use strict';
 
-const { statusTypes } = require('./lib/constants');
+const { statusTypes, eventTypes } = require('./lib/constants');
 
 const nodeConfig = {
     /** @type {runtimeRED} Reference to the master RED instance */
@@ -19,6 +19,14 @@ function nodeInstance(config) {
     if (!this.jack) {
         return;
     }
+
+    RED.nodes.eachNode((n) => {
+        if (n.type === this.type && n.id !== this.id && n.jack === this.jack.id) {
+            this.error(
+                `Another [${n.type}:${n.id}] was found, using the same [${this.jack.type}:${this.jack.id}] known as "${this.jack.name}". This may lead to problems and should be avoided!`
+            );
+        }
+    });
 
     this.messageQueue = [];
     this.connected = false;
@@ -39,7 +47,7 @@ function nodeInstance(config) {
         }
     };
 
-    this.handleMessageQueue = async (queueItem) => {
+    this.handleMessageQueue = (queueItem) => {
         if (this.connected) {
             this.reportDepth();
 
@@ -62,38 +70,37 @@ function nodeInstance(config) {
         }
     };
 
-    this.jack.register(this, async (message) => {
-        switch (message.topic) {
-            case 'status': {
-                this.statusMessage = message.payload;
-                this.status(this.statusMessage);
-                this.connected = message.status === statusTypes.CONNECTED ? true : false;
-                this.handleMessageQueue();
-                if (this.connected) {
-                    // eslint-disable-next-line unicorn/no-null
-                    this.send([null, { topic: ['#'], action: 'subscribe' }]);
-                } else {
-                    // eslint-disable-next-line unicorn/no-null
-                    this.send([null, { topic: ['#'], action: 'unsubscribe' }]);
-                }
-            }
+    this.jack.register(this, eventTypes.STATUS, (message) => {
+        this.statusMessage = message.payload;
+        this.status(this.statusMessage);
+        this.connected = message.status === statusTypes.CONNECTED ? true : false;
+        this.handleMessageQueue();
+        if (this.connected) {
+            // eslint-disable-next-line unicorn/no-null
+            this.send([null, { topic: ['#'], action: 'subscribe' }]);
+        } else {
+            // eslint-disable-next-line unicorn/no-null
+            this.send([null, { topic: ['#'], action: 'unsubscribe' }]);
         }
-        this.send(message);
+        // this.send(message);
     });
 
     this.on('input', (message, send, done) => {
         // send = send || function () { node.send.apply(node, arguments); };
         // done = done || function() { node.done.apply(node, arguments); }
 
-        if (message && message.action && !message.payload) {
-            // eslint-disable-next-line unicorn/no-null
-            send([null, message]);
-        } else if (message && message.status) {
-            // TODO
-        } else if (message && message.topic && message.payload && message.qos && message.retain) {
-            this.messageQueue.push({ message, send, done });
-            if (this.messageQueue.length === 1) this.handleMessageQueue(this.messageQueue[0]);
-        }
+        if (message) {
+            if (message.action && !message.payload) {
+                // eslint-disable-next-line unicorn/no-null
+                send([null, message]);
+                if (done) done();
+            } else if (message.status) {
+                // TODO
+            } else if (message.topic && message.payload && message.qos && message.retain) {
+                this.messageQueue.push({ message, send, done });
+                if (this.messageQueue.length === 1) this.handleMessageQueue(this.messageQueue[0]);
+            }
+        } else if (done) done();
     });
 
     this.on('close', () => {

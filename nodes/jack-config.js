@@ -9,7 +9,7 @@ const package_ = require(path.join(__dirname, '..', 'package.json'));
 const { JACK } = require('./lib/jack');
 const discover = require('./lib/discover');
 const { hasProperty, isValidTopic } = require('./lib/utils');
-const { statusTypes, statusMessages } = require('./lib/constants');
+const { statusTypes, statusMessages, eventTypes } = require('./lib/constants');
 
 const nodeConfig = {
     /** @type {runtimeRED} Reference to the master RED instance */
@@ -210,18 +210,18 @@ function nodeInstance(config) {
      * @param {registerCallback} callback - handle global updates for child nodes
      * @returns {boolean}
      */
-    this.register = (childNode, callback) => {
+    this.register = (childNode, eventType, callback) => {
         if (!childNode) return false;
+
+        const id = eventType + ':' + this.config.id + '_' + childNode.id;
 
         this.consumers[childNode.id] = {
             consumer: childNode,
-            subscription: '',
+            subscriptions: new Set([id]),
             filter: {},
             whitelistedTopics: new Set(),
             blacklistedTopics: new Set(),
         };
-
-        const id = this.config.id + '_global_' + childNode.id;
 
         this.events.on(id, (message) => {
             callback(RED.util.cloneMessage(message));
@@ -239,7 +239,7 @@ function nodeInstance(config) {
      */
     this.deregister = (childNode) => {
         if (this.consumers[childNode.id]) {
-            this.unsubscribe(this.consumers[childNode.id].subscription);
+            for (const id of this.consumers[childNode.id].subscriptions) this.unsubscribe(id);
             delete this.consumers[childNode.id];
             return true;
         }
@@ -258,7 +258,7 @@ function nodeInstance(config) {
      * @param {subscribeCallback} callback - handle specific updates for child nodes
      * @returns {boolean}
      */
-    this.subscribe = (childNode, callback) => {
+    this.subscribe = (childNode, eventType, callback) => {
         if (!childNode) return false;
 
         if (typeof callback !== 'function') {
@@ -268,7 +268,7 @@ function nodeInstance(config) {
 
         const filter = childNode.filter || {};
 
-        if (filter.domain === undefined) return false;
+        // if (filter.domain === undefined) return false;
 
         const validFilterProperties = new Set([
             'domain',
@@ -302,10 +302,10 @@ function nodeInstance(config) {
             }
         }
 
-        const id = this.config.id + '_' + childNode.id;
+        const id = eventType + ':' + this.config.id + '_' + childNode.id;
 
         if (childNode.id && hasProperty(this.consumers, childNode.id)) {
-            this.consumers[childNode.id].subscription = id;
+            this.consumers[childNode.id].subscriptions.add(id);
             this.consumers[childNode.id].filter = filter;
         }
 
@@ -337,12 +337,15 @@ function nodeInstance(config) {
             this.contextStore.ts = Date.now();
             this.contextStore.status = Object.keys(statusTypes).find((key) => statusTypes[key] === this.status);
         }
-        for (let id in this.consumers) {
-            this.events.emit(this.config.id + '_global_' + id, {
-                topic: 'status',
-                payload: statusMessages[this.status],
-                status: this.status,
-            });
+        for (const consumer in this.consumers) {
+            const id = eventTypes.STATUS + ':' + this.config.id + '_' + consumer;
+
+            if (this.consumers[consumer].subscriptions.has(id))
+                this.events.emit(id, {
+                    topic: eventTypes.STATUS,
+                    payload: statusMessages[this.status],
+                    status: this.status,
+                });
         }
     };
 
@@ -683,56 +686,144 @@ function nodeInstance(config) {
      * @param {Topic} topic
      * @param {buffer|string} message
      * @param {object} packet
-     * @returns {Promise<any>}
+     * @returns {void}
      */
     this.onMessage = (topic, message, packet, done) => {
-        if (!isValidTopic(topic)) return;
+        try {
+            if (topic && !isValidTopic(topic)) throw new Error(`Topic "${topic}" invalid`);
 
-        const topicParts = topic.split('/');
-        if (topicParts.length === 1 || topicParts[0] === undefined) return;
+            const topicParts = topic ? topic.split('/') : [];
+            if (topic && (topicParts.length === 1 || topicParts[0] === undefined)) return;
 
-        const domain = topicParts.shift();
-        if (!this.rootDomains.includes(domain)) return;
+            const domain = topicParts.shift();
+            if (!this.rootDomains.includes(domain)) throw new Error(`Domain "${domain}" not found`);
 
-        if (topicParts[0] === 'status') topicParts.shift();
-        else return;
+            if (topicParts[0] === 'status') topicParts.shift();
+            else return;
 
-        /** @type {Payload} */ let payload = this.getPayloadFromMessage(message);
-        if (!hasProperty(payload, 'v')) return;
+            /** @type {Payload} */ let payload = this.getPayloadFromMessage(message);
+            if (!hasProperty(payload, 'v')) throw new Error(`Content of payload invalid`);
 
-        payload = this.savePayload(domain, topic, payload);
-        const item = this.prepareReply(domain, topicParts);
+            payload = this.savePayload(domain, topic, payload);
+            const item = this.prepareReply(domain, topicParts);
 
-        const replyMessage = {
-            topic,
-            payload: payload.v,
-            ...item,
-            value: payload.v,
-            valuePrevious: payload.previous,
-            qos: packet.qos || 0,
-            retain: packet.retain || false,
-            ts: payload.ts || Date.now(),
-            s: payload.s || 0,
-            change: payload.change,
-            cache: payload.cache,
-        };
+            const replyMessage = {
+                topic,
+                payload: payload.v,
+                ...item,
+                value: payload.v,
+                valuePrevious: payload.previous,
+                qos: packet.qos || 0,
+                retain: packet.retain || false,
+                ts: payload.ts || Date.now(),
+                s: payload.s || 0,
+                change: payload.change,
+                cache: payload.cache,
+                source: 'onMessage',
+            };
 
-        for (const id of Object.keys(this.consumers)) {
-            const { filter, subscription, whitelistedTopics, blacklistedTopics } = this.consumers[id];
+            for (const consumer in this.consumers) {
+                const id = eventTypes.EVENT + ':' + this.config.id + '_' + consumer;
 
-            // if (blacklistedTopics.has(topic)) continue;
-            const match = this.applyFilter(filter, topic, payload, item, whitelistedTopics);
+                if (this.consumers[consumer].subscriptions.has(id)) {
+                    const { filter, whitelistedTopics } = this.consumers[consumer];
 
-            // Reply
-            if (match) {
-                whitelistedTopics.add(topic);
-                this.events.emit(subscription, replyMessage);
-            } else {
-                blacklistedTopics.add(topic);
+                    // if (blacklistedTopics.has(topic)) continue;
+                    const match = this.applyFilter(filter, topic, payload, item, whitelistedTopics);
+
+                    // Reply
+                    if (match) {
+                        whitelistedTopics.add(topic);
+                        this.events.emit(id, replyMessage);
+                    }
+                }
             }
+        } catch (error) {
+            this.error(`onMessage: unable to process inputs - ${error}`);
+        } finally {
+            if (done) done();
         }
+    };
 
-        if (done) done();
+    /**
+     * Handle incomming message for child nodes
+     * @param {string} childNodeID
+     * @param {Topic} topic
+     * @param {buffer|string} message
+     * @param {object} packet
+     * @returns {void}
+     */
+    this.onInput = (childNodeID, topic, message, packet, done) => {
+        try {
+            if (topic && !isValidTopic(topic)) throw new Error(`Topic "${topic}" invalid`);
+
+            const topicParts = topic ? topic.split('/') : [];
+            if (topic && topicParts.length !== 5) throw new Error(`Content of topic "${topic}" invalid`);
+
+            const domains = new Set(['device', 'virtdev']);
+
+            const [topicDomain, _, topicDevice, topicChannelIndex, topicDatapoint] = topicParts;
+            const {
+                domain: packetDomain,
+                device: packetDevice,
+                channelIndex: packetChannelIndex,
+                datapoint: packetDatapoint,
+            } = packet;
+
+            const domain = topicDomain && domains.has(topicDomain) ? topicDomain : packetDomain;
+
+            if (!this.rootDomains.includes(domain)) throw new Error(`Domain "${domain}" not found`);
+
+            const device = topicDevice || packetDevice;
+            const channelIndex = topicChannelIndex || packetChannelIndex;
+            const datapoint = topicDatapoint || packetDatapoint;
+
+            if (!(device && channelIndex && datapoint))
+                throw new Error(
+                    `Either device "${device}", channelIndex "${channelIndex}" or datapoint "${datapoint}" not found`
+                );
+
+            /** @type {Payload} */ let payload;
+            const statusItem = `${domain}/status/${device}/${channelIndex}/${datapoint}`;
+            if (this.contextStore.values[domain].has(statusItem))
+                payload = this.contextStore.values[domain].get(statusItem);
+
+            const item = this.prepareReply(domain, [device, channelIndex, datapoint]);
+
+            if (!(payload && item)) throw new Error('No values found for "' + statusItem + '" in context store');
+
+            const replyMessage = {
+                topic,
+                payload: message,
+                ...item,
+                value: payload.v,
+                valuePrevious: payload.previous,
+                qos: payload.qos || 0,
+                retain: payload.retain || false,
+                ts: payload.ts || Date.now(),
+                s: payload.s || 0,
+                change: payload.change,
+                cache: payload.cache,
+                source: 'onInput',
+            };
+
+            const id = eventTypes.VALUE + ':' + this.config.id + '_' + childNodeID;
+
+            if (this.consumers[childNodeID].subscriptions.has(id)) {
+                // Reply
+                this.events.emit(id, replyMessage);
+            }
+        } catch (error) {
+            // this.error(`onInput: unable to process inputs - ${error}`);
+            const id = eventTypes.ERROR + ':' + this.config.id + '_' + childNodeID;
+
+            if (this.consumers[childNodeID].subscriptions.has(id)) {
+                // Reply
+                this.events.emit(id, { topic, message, error: `onInput: unable to process inputs - ${error}` });
+            }
+        } finally {
+            if (done) done();
+        }
     };
 
     //#endregion ---- Functions for child nodes ----

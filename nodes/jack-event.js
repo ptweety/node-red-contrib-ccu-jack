@@ -1,6 +1,6 @@
 'use strict';
 
-const { statusTypes } = require('./lib/constants');
+const { statusTypes, eventTypes } = require('./lib/constants');
 
 const nodeConfig = {
     /** @type {runtimeRED} Reference to the master RED instance */
@@ -22,13 +22,9 @@ function nodeInstance(config) {
 
     this.connected = false;
 
-    this.jack.register(this, (message) => {
-        switch (message.topic) {
-            case 'status': {
-                this.status(message.payload);
-                this.connected = message.status === statusTypes.CONNECTED ? true : false;
-            }
-        }
+    this.jack.register(this, eventTypes.STATUS, (message) => {
+        this.status(message.payload);
+        this.connected = message.status === statusTypes.CONNECTED ? true : false;
         // this.send(message);
     });
 
@@ -64,7 +60,7 @@ function nodeInstance(config) {
         this.filter[attribute_] = config[attribute + 'T'] === 're' ? new RegExp(config[attribute]) : config[attribute];
     }
 
-    this.jack.subscribe(this, (message) => {
+    this.jack.subscribe(this, eventTypes.EVENT, (message) => {
         message.topic = config.topic === '*' ? message.topic : this.jack.topicReplace(config.topic, message);
         this.send(message);
     });
