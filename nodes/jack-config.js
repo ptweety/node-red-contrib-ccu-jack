@@ -345,6 +345,7 @@ function nodeInstance(config) {
                     topic: eventTypes.STATUS,
                     payload: statusMessages[this.status],
                     status: this.status,
+                    domains: this.rootDomains,
                 });
         }
     };

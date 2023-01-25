@@ -1,5 +1,6 @@
 'use strict';
 
+const { isValidTopic } = require('./lib/utils');
 const { statusTypes, eventTypes } = require('./lib/constants');
 
 const nodeConfig = {
@@ -31,6 +32,7 @@ function nodeInstance(config) {
     this.messageQueue = [];
     this.connected = false;
     this.statusMessage = {};
+    this.rootDomains = new Set();
     this.timerQueueDepth;
 
     this.reportDepth = () => {
@@ -72,15 +74,23 @@ function nodeInstance(config) {
 
     this.jack.register(this, eventTypes.STATUS, (message) => {
         this.statusMessage = message.payload;
-        this.status(this.statusMessage);
         this.connected = message.status === statusTypes.CONNECTED ? true : false;
-        this.handleMessageQueue();
+        this.status(this.statusMessage);
+
         if (this.connected) {
+            if (Array.isArray(message.domains) && message.domains.length > 0)
+                for (const domain of message.domains) {
+                    if (['device', 'program', 'sysvar', 'virtdev'].includes(domain))
+                        this.rootDomains.add(`${domain}/#`);
+                }
+
             // eslint-disable-next-line unicorn/no-null
-            this.send([null, { topic: ['#'], action: 'subscribe' }]);
+            this.send([null, [{ action: 'connect' }, { topic: [...this.rootDomains], action: 'subscribe' }]]);
+            this.handleMessageQueue();
         } else {
-            // eslint-disable-next-line unicorn/no-null
-            this.send([null, { topic: ['#'], action: 'unsubscribe' }]);
+            if (this.rootDomains.length > 0)
+                // eslint-disable-next-line unicorn/no-null
+                this.send([null, { topic: [...this.rootDomains], action: 'unsubscribe' }]);
         }
         // this.send(message);
     });
@@ -90,20 +100,26 @@ function nodeInstance(config) {
         // done = done || function() { node.done.apply(node, arguments); }
 
         if (message) {
-            if (message.action && !message.payload) {
-                // eslint-disable-next-line unicorn/no-null
-                send([null, message]);
+            if (message.action && !message.status) {
+                if (['getSubscriptions'].includes(message.action))
+                    // eslint-disable-next-line unicorn/no-null
+                    send([null, { action: message.action, status: '__get' }]);
                 if (done) done();
             } else if (message.status) {
-                // TODO
+                send({ topic: message.topic, payload: message.payload });
+                if (done) done();
             } else if (message.topic && message.payload && message.qos && message.retain) {
-                this.messageQueue.push({ message, send, done });
+                if (isValidTopic(message.topic)) this.messageQueue.push({ message, send, done });
                 if (this.messageQueue.length === 1) this.handleMessageQueue(this.messageQueue[0]);
             }
         } else if (done) done();
     });
 
     this.on('close', () => {
+        if (this.rootDomains.length > 0)
+            // eslint-disable-next-line unicorn/no-null
+            this.send([null, { topic: this.rootDomains, action: 'unsubscribe' }]);
+
         this.jack.deregister(this);
     });
 }
