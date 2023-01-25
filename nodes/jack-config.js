@@ -538,10 +538,11 @@ function nodeInstance(config) {
                         if (hasProperty(this.contextStore.values, domain)) {
                             for (const child of storedChannel.children) {
                                 if (child === datapoint || child === '$MASTER') continue;
-                                const neighbour = this.contextStore.values[domain].get(
-                                    `${domain}/status/${device}/${channel}/${child}`
-                                );
-                                item.datapoints[child] = neighbour;
+                                const statusItem = `${domain}/status/${device}/${channel}/${child}`;
+                                if (this.contextStore.values[domain].has(statusItem)) {
+                                    const neighbour = this.contextStore.values[domain].get(statusItem);
+                                    if (hasProperty(neighbour, 'v')) item.datapoints[child] = neighbour.v;
+                                }
                             }
                         }
 
