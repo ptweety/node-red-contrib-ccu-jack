@@ -471,7 +471,7 @@ function nodeInstance(config) {
      * @param {string[]} topicParts
      * @returns {object} data to enrich payload for reply message
      */
-    this.prepareReply = (domain, topicParts) => {
+    this.prepareReply = (domain, topicParts, payloadValue) => {
         let item = { domain: domain };
 
         const getValuesByType = (base, value) => {
@@ -483,6 +483,7 @@ function nodeInstance(config) {
                 }
                 case 'ENUM': {
                     item[`${base}Enum`] = value.valueList;
+                    item[`${base}Value`] = value.valueList[payloadValue];
                     break;
                 }
                 case 'FLOAT':
@@ -706,7 +707,7 @@ function nodeInstance(config) {
             if (!hasProperty(payload, 'v')) throw new Error(`Content of payload invalid`);
 
             payload = this.savePayload(domain, topic, payload);
-            const item = this.prepareReply(domain, topicParts);
+            const item = this.prepareReply(domain, topicParts, payload.v);
 
             const replyMessage = {
                 topic,
