@@ -2,8 +2,17 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v0.0.5](https://github.com/ptweety/node-red-contrib-ccu-jack/compare/v0.0.4...v0.0.5)
+
+- fix: reduce datapoints object to only show values [`68b010e`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/68b010e76803ccedb968fa33fb8b9c897a512551)
+- fix: add missing ...Value for ...Type = ENUM in message [`bc50f76`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/bc50f76b1af06a4e2cd3fe1375845142bf11cb41)
+- fix: improve interaction with mqtt node [`b8d42a4`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/b8d42a4d2263f2aea4aaa65ff2fb1a7ebc901034)
+
 #### [v0.0.4](https://github.com/ptweety/node-red-contrib-ccu-jack/compare/v0.0.3...v0.0.4)
 
+> 24 January 2023
+
+- chore: bump version to 0.0.4 [`9e7609a`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/9e7609a7a8cfd69c4b2b8c5a750fe8f8f90d8819)
 - feat: add new jack-value node [`c156ab1`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/c156ab11591fdcadc78e7066e56f604d19f3e470)
 - refactor: internal event handling [`529873b`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/529873b5e8cf87c38b95bfe77caf629af20bd131)
 
