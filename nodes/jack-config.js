@@ -531,8 +531,8 @@ function nodeInstance(config) {
                         item.datapointName = storedDatapoint.title;
                         item.datapointType = storedDatapoint.type;
                         getValuesByType('datapoint', storedDatapoint);
-                        item.datapointDefault = storedDatapoint.default;
-                        item.datapointControl = storedDatapoint.control;
+                        if (storedDatapoint.default !== undefined) item.datapointDefault = storedDatapoint.default;
+                        if (storedDatapoint.control !== undefined) item.datapointControl = storedDatapoint.control;
 
                         item.datapoints = {};
                         if (hasProperty(this.contextStore.values, domain)) {
@@ -791,7 +791,7 @@ function nodeInstance(config) {
             if (this.contextStore.values[domain].has(statusItem))
                 payload = this.contextStore.values[domain].get(statusItem);
 
-            const item = this.prepareReply(domain, [device, channelIndex, datapoint]);
+            const item = this.prepareReply(domain, [device, channelIndex, datapoint], payload.v);
 
             if (!(payload && item)) throw new Error('No values found for "' + statusItem + '" in context store');
 
