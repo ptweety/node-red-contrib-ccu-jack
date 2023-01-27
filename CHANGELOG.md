@@ -2,8 +2,18 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v0.0.6](https://github.com/ptweety/node-red-contrib-ccu-jack/compare/v0.0.5...v0.0.6)
+
+- feat: add values to global context [`eb8a893`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/eb8a893b89deb59b1271d0775b050e3f3c02a174)
+- chore: update dependencies [`cbbb331`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/cbbb331bc97ab3670ecd4e3b378bc820ec980dd3)
+- fix: add feature flag for development to hide e.g. updates to global context [`f44144e`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/f44144ed95a5870b203fb892dcde38ecf692dc99)
+- fix: add missing payload.v when calling prepareReply [`b8d372c`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/b8d372cc15aadb261a6dcb359054238b2e3a5fb3)
+
 #### [v0.0.5](https://github.com/ptweety/node-red-contrib-ccu-jack/compare/v0.0.4...v0.0.5)
 
+> 25 January 2023
+
+- chore: bump version to 0.0.5 [`d5d950f`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/d5d950f5d01d88e360102121eaec73a9c1ce8ea5)
 - fix: reduce datapoints object to only show values [`68b010e`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/68b010e76803ccedb968fa33fb8b9c897a512551)
 - fix: add missing ...Value for ...Type = ENUM in message [`bc50f76`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/bc50f76b1af06a4e2cd3fe1375845142bf11cb41)
 - fix: improve interaction with mqtt node [`b8d42a4`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/b8d42a4d2263f2aea4aaa65ff2fb1a7ebc901034)
