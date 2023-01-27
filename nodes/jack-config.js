@@ -48,6 +48,7 @@ function nodeInstance(config) {
 
     this.globalContext = this.context().global;
     this.contextStore = {};
+    this.userStore = {};
     this.timerContextStore;
 
     this.isLocal = config.host.startsWith('127.') || config.host === 'localhost' || false;
@@ -97,11 +98,15 @@ function nodeInstance(config) {
         if (this.contextStore) {
             this.contextStore.ts = Date.now();
             if (nodeConfig.development) {
-                this.globalContext.set('jack_' + config.id, this.contextStore, (error) => {
-                    if (error) this.error(error);
-                });
                 console.dir(this.contextStore);
             }
+        }
+
+        if (this.userStore) {
+            this.userStore.ts = Date.now();
+            this.globalContext.set('jack-config-' + config.id, this.userStore, (error) => {
+                if (error) this.error(error);
+            });
         }
 
         if (this.timerContextStore !== null) clearTimeout(this.timerContextStore);
@@ -455,13 +460,15 @@ function nodeInstance(config) {
                 payload.change = false;
             } else {
                 // item updated
-                payload.previous = item.v;
+                payload.vP = item.v;
+                payload.tsP = item.ts;
                 payload.cache = false;
                 payload.change = true;
             }
         } else {
             // new item
-            payload.previous;
+            payload.vP;
+            payload.tsP;
             payload.cache = true;
             payload.change = false;
         }
@@ -715,15 +722,25 @@ function nodeInstance(config) {
             payload = this.savePayload(domain, topic, payload);
             const item = this.prepareReply(domain, topicParts, payload.v);
 
+            if (['device', 'virtdev'].includes(domain)) {
+                RED.util.setObjectProperty(
+                    this.userStore,
+                    `${item.device}.${item.channelIndex}.${item.datapoint}`,
+                    payload,
+                    true
+                );
+            }
+
             const replyMessage = {
                 topic,
                 payload: payload.v,
                 ...item,
                 value: payload.v,
-                valuePrevious: payload.previous,
+                valuePrevious: payload.vP,
                 qos: packet.qos || 0,
                 retain: packet.retain || false,
                 ts: payload.ts || Date.now(),
+                tsPrevious: payload.tsP,
                 s: payload.s || 0,
                 change: payload.change,
                 cache: payload.cache,
@@ -1080,7 +1097,7 @@ function nodeInstance(config) {
 module.exports = (RED) => {
     nodeConfig.RED = RED;
 
-    RED.log.info('node-red-contrib-ccu-jack version: ' + package_.version);
+    RED.log.debug('node-red-contrib-ccu-jack version: ' + package_.version);
 
     if (process.env.NRCCJ_DEV === 'true') {
         RED.log.warn('Development features enabled');
