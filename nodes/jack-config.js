@@ -16,6 +16,8 @@ const nodeConfig = {
     RED: undefined,
     /** @type {string} Node Name - has to match with html file and package.json `red` section */
     nodeName: 'jack-config',
+    /** @type {boolean} enable development features */
+    development: false,
 };
 
 //#endregion ----- Module level variables ---- //
@@ -45,7 +47,7 @@ function nodeInstance(config) {
     this.consumers = {};
 
     this.globalContext = this.context().global;
-    this.contextStore = config.contextStore;
+    this.contextStore = {};
     this.timerContextStore;
 
     this.isLocal = config.host.startsWith('127.') || config.host === 'localhost' || false;
@@ -94,9 +96,12 @@ function nodeInstance(config) {
     this.setContext = (active) => {
         if (this.contextStore) {
             this.contextStore.ts = Date.now();
-            this.globalContext.set('jack_' + this.host.replace(/\./g, '_'), this.contextStore, (error) => {
-                if (error) this.error(error);
-            });
+            if (nodeConfig.development) {
+                this.globalContext.set('jack_' + config.id, this.contextStore, (error) => {
+                    if (error) this.error(error);
+                });
+                console.dir(this.contextStore);
+            }
         }
 
         if (this.timerContextStore !== null) clearTimeout(this.timerContextStore);
@@ -1076,6 +1081,11 @@ module.exports = (RED) => {
     nodeConfig.RED = RED;
 
     RED.log.info('node-red-contrib-ccu-jack version: ' + package_.version);
+
+    if (process.env.NRCCJ_DEV === 'true') {
+        RED.log.warn('Development features enabled');
+        nodeConfig.development = true;
+    }
 
     RED.nodes.registerType(nodeConfig.nodeName, nodeInstance, {
         credentials: {
