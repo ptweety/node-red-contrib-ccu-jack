@@ -59,8 +59,8 @@ Adhering to the following this process is the best way to get your work merged:
 - Lint and Test your changes
 
     ```bash
-    $ npm run lintonly
-    $ npm run testonly
+    $ npm run lint
+    $ npm run test
     $ npm test
     ```
 
@@ -98,7 +98,7 @@ The recommended way to develop is using a local [Visual Studio Code](https://cod
 - _Create_ a `settings.json` in your runtime folder:
 
     ```javascript
-    process.env.SOME_ENV = true;
+    process.env.NRCCJ_DEV = true;
 
     module.exports = {
         flowFile: '../.node-red/flows.json',

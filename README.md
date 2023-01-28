@@ -15,7 +15,7 @@ With these Nodes you can connect Homematic Devices from a [CCU](https://homemati
 
 ## Configuration
 
-1. Start with an import of the `jack-bridge.json`. You can find this in the [examples folder on GitHub](https://github.com/ptweety/node-red-contrib-ccu-jack/tree/master/examples) or directly in Node-RED.
+1. Start with an import of the `jack-bridge.json`. You can find this in the [examples folder on GitHub](https://github.com/ptweety/node-red-contrib-ccu-jack/tree/main/examples) or directly in Node-RED.
 
 1. Connect to the VEAP API of CCU-Jack
 
