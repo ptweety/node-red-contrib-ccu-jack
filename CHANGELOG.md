@@ -2,8 +2,18 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v0.0.7](https://github.com/ptweety/node-red-contrib-ccu-jack/compare/v0.0.6...v0.0.7)
+
+- feat: add option to store copy of internal context in global context [`2c9de30`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/2c9de301e0e0b13a2a3eb1899096731ae85d6e1e)
+- docs: update README and CONTRIBUTING [`8f70cd0`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/8f70cd0e9ac105c06951db4ed9fa5034a2941e3c)
+- docs: update examples and jack-bridge [`481bece`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/481bece904a2833f1194669939ba461c413bdb2f)
+- docs: add jack-value, update jack-event [`e7323f5`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/e7323f557f36a238a3090a1f3bd18894b06fa470)
+
 #### [v0.0.6](https://github.com/ptweety/node-red-contrib-ccu-jack/compare/v0.0.5...v0.0.6)
 
+> 27 January 2023
+
+- chore: bump version to 0.0.6 [`3750687`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/3750687c2d568ea6e0068cf6152726c22a74c54a)
 - feat: add values to global context [`eb8a893`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/eb8a893b89deb59b1271d0775b050e3f3c02a174)
 - chore: update dependencies [`cbbb331`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/cbbb331bc97ab3670ecd4e3b378bc820ec980dd3)
 - fix: add feature flag for development to hide e.g. updates to global context [`f44144e`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/f44144ed95a5870b203fb892dcde38ecf692dc99)
