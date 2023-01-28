@@ -27,6 +27,13 @@
         <input type="text" id="node-config-input-name" data-i18n="[placeholder]@ptweety/node-red-contrib-ccu-jack/messages:config.input.name" style="width: calc(100% - 105px)">
     </div>
 
+    <div class="form-row">
+        <label for="node-config-input-usecontext"> </label>
+        <input type="checkbox" id="node-config-input-usecontext" style="width: 22px; vertical-align: top;">
+        <span data-i18n="@ptweety/node-red-contrib-ccu-jack/messages:config.label.use-context"></span>
+    </div>
+
+
     <div class="separator">VEAP</div>
 
     <div class="form-row">
@@ -61,6 +68,7 @@
 	<div class="form-tips" style="max-width: unset; width: calc(100% - 18px)">
 		<b>Important:</b> CCU-Jack >= v2.4.0 required
 	</div>
+
 </script>
 
 <script type="text/javascript">
@@ -82,6 +90,8 @@
             useauth: { value: false },
             usetls: { value: false },
             tls: { type: 'tls-config', required: false },
+
+            usecontext: { value: false },
         },
         credentials: {
             user: { type: 'text' },

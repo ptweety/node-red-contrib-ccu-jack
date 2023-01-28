@@ -31,7 +31,8 @@
 			"server": "Server",
             "port": "Port",
             "use-tls": "Sichere Verbindung (SSL/TLS) aktivieren",
-            "use-auth": "Basis-Authentifizierung verwenden"
+            "use-auth": "Basis-Authentifizierung verwenden",
+            "use-context": "Internen Kontext in globalen Kontext kopieren"
 		},
         "input": {
             "name": "Name",

@@ -50,6 +50,7 @@ function nodeInstance(config) {
     this.contextStore = {};
     this.userStore = {};
     this.timerContextStore;
+    this.usecontext = config.usecontext;
 
     this.isLocal = config.host.startsWith('127.') || config.host === 'localhost' || false;
 
@@ -102,9 +103,13 @@ function nodeInstance(config) {
             }
         }
 
-        if (this.userStore) {
+        if (this.userStore && this.usecontext) {
             this.userStore.ts = Date.now();
             this.globalContext.set('jack-config-' + config.id, this.userStore, (error) => {
+                if (error) this.error(error);
+            });
+        } else {
+            this.globalContext.set('jack-config-' + config.id, undefined, (error) => {
                 if (error) this.error(error);
             });
         }
@@ -161,6 +166,15 @@ function nodeInstance(config) {
                 ...this.contextStore,
                 ...domainResources,
             };
+
+            if (this.usecontext)
+                for (const domainResource in domainResources)
+                    RED.util.setObjectProperty(
+                        this.userStore,
+                        `${domainResource}`,
+                        domainResources[domainResource],
+                        true
+                    );
 
             for (const domain of rootDomains) {
                 this.contextStore[domain.identifier]['.'] = {
@@ -722,10 +736,10 @@ function nodeInstance(config) {
             payload = this.savePayload(domain, topic, payload);
             const item = this.prepareReply(domain, topicParts, payload.v);
 
-            if (['device', 'virtdev'].includes(domain)) {
+            if (this.usecontext && ['device', 'virtdev'].includes(domain)) {
                 RED.util.setObjectProperty(
                     this.userStore,
-                    `${item.device}.${item.channelIndex}.${item.datapoint}`,
+                    `${domain}.${item.device}.${item.channelIndex}.${item.datapoint}.payload`,
                     payload,
                     true
                 );
@@ -822,10 +836,11 @@ function nodeInstance(config) {
                 payload: message,
                 ...item,
                 value: payload.v,
-                valuePrevious: payload.previous,
+                valuePrevious: payload.vP,
                 qos: payload.qos || 0,
                 retain: payload.retain || false,
                 ts: payload.ts || Date.now(),
+                tsPrevious: payload.tsP,
                 s: payload.s || 0,
                 change: payload.change,
                 cache: payload.cache,
