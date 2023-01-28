@@ -1,30 +1,14 @@
-<script type="text/markdown" data-help-name="jack-event">
-Gibt empfangene MQTT Nachrichten angereicht mit Daten des CCU-Jack aus.
+<script type="text/markdown" data-help-name="jack-value">
+Gibt aktuelle Geräte-Daten des CCU-Jack aus.
 
 ### Setup
 
 : Jack Config (select) : Die zu verwendende Jack-Konfiguration.
 : topic (string) : `msg.topic` ausgehender Nachrichten. Kann mit Platzhaltern konfiguriert werden. `*` nutzt das ursprüngliche `topic`.
 : domain (select) : Der Bereich (unter root des CCU-Jack) unter welchem die gewüschten Geräte geführt werden. `*` erlaubt Events aller Bereiche.
-<details><summary>Devices / Virtual Devices</summary>
-
-: interfaceType (string|regexp) : Die Schnittstelle über welche die gewüschten Geräte angebunden sind. `*` erlaubt Events aller verbundenen Schnittstellen.
-: room (number|regexp) : Raum Filter nach id, z.B. `1234` für `Flur`.
-: function (number|regexp) : Gewerk Filter nach id, z.B. `1212` für `Licht`.
 : device (string|regexp) : Die Seriennummer des Geräts, z.B. `0009156999C7DB`.
-: deviceType (string|regexp) : Die Typen-Bezeichnung des Geräts, z.B. `HmIP-SMI`.
-: channel (string|regexp) : Die Kanaladresse bestehend aus Serien- und Kanalnummer, z.B. <code>0009156999C7DB&#58;0</code>.
-: channelType (string|regexp) : Der Typ des Kanals, z.B. `MAINTENANCE`.
 : channelIndex (number|regexp) : Der Index des Kanals, z.B. `0`.
 : datapoint (string|regexp) : Der Datenpunkt des Kanals, z.B. `RSSI_PEER`.
-</details><details><summary>Programs</summary>
-
-: program (number|regexp) : Programm Filter nach id, z.B. `4235`.
-</details><details><summary>System Variables</summary>
-
-: sysvar (number|regexp) : Sysvar Filter nach id, z.B. `950`.
-</details>
-
 : Nur geänderte Werte ausgeben (checkbox) : Ein Event wird nur dann erzeugt, wenn sich der Wert seit dem letzten Event verändert hat.
 : Beim Start letzten bekannten Wert ausgeben (checkbox) : Wenn Node-RED gestartet wird, dann wird der letzte Wert (sofern bekannt) ausgegeben.
 
@@ -33,8 +17,6 @@ Gibt empfangene MQTT Nachrichten angereicht mit Daten des CCU-Jack aus.
 : topic (string) : 
 : payload (string|number|boolean) : 
 : domain (string) :
-<details><summary>Devices / Virtual Devices</summary>
-
 : interfaceType (string) :
 : device (string) :
 : deviceName (string) :
@@ -54,18 +36,6 @@ Gibt empfangene MQTT Nachrichten angereicht mit Daten des CCU-Jack aus.
 : datapoints (object) :
 : rooms (object) :
 : functions (object) :
-</details><details><summary>Programs</summary>
-
-: program (string) :
-: programName (string) :
-: programType (string) :
-</details><details><summary>System Variables</summary>
-
-: sysvar (string) :
-: sysvarName (string) :
-: sysvarType (string) :
-</details>
-
 : mqtt (object) : MQTT topics from CCU-Jack. Possible values are `"get"`, `"set"`, `"status"`
 : value (string|number|boolean) : same as `payload`
 : valuePrevious (string|number|boolean) : vorheriger `payload`

@@ -1,30 +1,14 @@
-<script type="text/markdown" data-help-name="jack-event">
-Forwards MQTT messages enriched with CCU-Jack data.
+<script type="text/markdown" data-help-name="jack-value">
+Outputs current device data of the CCU-Jack.
 
 ### Setup
 
 : Jack Config (select) : Jack-Config to use.
 : topic (string) : `msg.topic` of outgoing messages. Can be configured with wildcards. `*` reuses the original `topic`.
 : domain (select) : the domain (under root of the CCU-Jack) which the desired devices are listed. `*` allows events of all domains.
-<details><summary>Devices / Virtual Devices</summary>
-
-: interfaceType (string|regexp) : type of interfaces via which the desired devices are connected. `*` allows events from all interface types.
-: room (number|regexp) : room filter by id, e.g. `1234` for `Corridor`.
-: function (number|regexp) : function filter by id, e.g. `1212` for `Light`.
 : device (string|regexp) : serial number of the device, e.g. `0009156999C7DB`.
-: deviceType (string|regexp) : type of the device, e.g. `HmIP-SMI`.
-: channel (string|regexp) : channel address consisting of serial and channel number, e.g. <code>0009156999C7DB&#58;0</code>.
-: channelType (string|regexp) : type of the channel, e.g. `MAINTENANCE`.
 : channelIndex (number|regexp) : index of the channel, e.g. `0`.
 : datapoint (string|regexp) : datapoint of the channel, e.g. `RSSI_PEER`.
-</details><details><summary>Programs</summary>
-
-: program (number|regexp) : program filter by id, e.g. `4235`.
-</details><details><summary>System Variables</summary>
-
-: sysvar (number|regexp) : sysvar filter by id, e.g. `950`.
-</details>
-
 : Emit only changed values (checkbox) : an event will only be emitted if and only if the value has changed.
 : Emit cached value on start (checkbox) : on (re-)start of Node-RED, the last value (if known) is emitted.
 
@@ -33,8 +17,6 @@ Forwards MQTT messages enriched with CCU-Jack data.
 : topic (string) : 
 : payload (string|number|boolean) : 
 : domain (string) :
-<details><summary>Devices / Virtual Devices</summary>
-
 : interfaceType (string) :
 : device (string) :
 : deviceName (string) :
@@ -54,18 +36,6 @@ Forwards MQTT messages enriched with CCU-Jack data.
 : datapoints (object) :
 : rooms (object) :
 : functions (object) :
-</details><details><summary>Programs</summary>
-
-: program (string) :
-: programName (string) :
-: programType (string) :
-</details><details><summary>System Variables</summary>
-
-: sysvar (string) :
-: sysvarName (string) :
-: sysvarType (string) :
-</details>
-
 : mqtt (object) : MQTT topics from CCU-Jack. Possible values are `"get"`, `"set"`, `"status"`
 : value (string|number|boolean) : same as `payload`
 : valuePrevious (string|number|boolean) : previous `payload`
