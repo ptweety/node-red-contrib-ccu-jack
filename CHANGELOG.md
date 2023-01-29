@@ -2,8 +2,18 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v0.0.8](https://github.com/ptweety/node-red-contrib-ccu-jack/compare/v0.0.7...v0.0.8)
+
+- feat: add getValues* status options to jack-bridge [`434a1b3`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/434a1b386522f584ed5f0472d85e47e230e5172c)
+- feat: add option to disable auto connect [`c33796e`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/c33796ec5b2dbffd8a988778a311cc4826b0dae2)
+- docs: update examples [`80ab43f`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/80ab43f99d2a59c791b2febd84a58c53fb80ea6c)
+- fix: add enum for type of domains [`8c6a844`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/8c6a8444aa6a1fb7d906438d37d4155ed111973a)
+
 #### [v0.0.7](https://github.com/ptweety/node-red-contrib-ccu-jack/compare/v0.0.6...v0.0.7)
 
+> 28 January 2023
+
+- chore: bump version to 0.0.7 [`135ff68`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/135ff68a9744880caea029cca16cb7e2b8cb2657)
 - feat: add option to store copy of internal context in global context [`2c9de30`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/2c9de301e0e0b13a2a3eb1899096731ae85d6e1e)
 - docs: update README and CONTRIBUTING [`8f70cd0`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/8f70cd0e9ac105c06951db4ed9fa5034a2941e3c)
 - docs: update examples and jack-bridge [`481bece`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/481bece904a2833f1194669939ba461c413bdb2f)
