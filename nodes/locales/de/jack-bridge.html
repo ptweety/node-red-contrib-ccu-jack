@@ -13,8 +13,7 @@ Verschiedene Nachrichtentypen können verarbeitet werden:
 
 #### Konfiguration
 
-: action (string) : Der Name der Aktion, welche ausgeführt werden soll. Verfügbare Aktionen sind `"connect"`, `"disconnect"`, `"subscribe"` und `"unsubscribe"`.
-: topic (string|object|array) : Benötigt für `"subscribe"` und `"unsubscribe"` Aktionen. <br> Ein string `#` oder JSON Objekt `["#"]` aboniert alles! <br> Siehe die Dokumentation des `MQTT In` Nodes.
+: action (string) : Der Name der Aktion, welche ausgeführt werden soll. Verfügbare Aktionen sind `"connect"`, `"disconnect"` und `"getSubscriptions"`.
 
 #### MQTT Nachrichten
 
@@ -33,8 +32,8 @@ Verschiedene Nachrichtentypen können verarbeitet werden:
 : status (object) : **Noch nicht implementiert!**
 
 2. MQTT Connection
-: action (string) : Der Name der Aktion, welche ausgeführt werden soll.
-: topic (string|object|array) : Benötigt für `"subscribe"` und `"unsubscribe"` Aktionen
+: action (string) : Der Name der Aktion, welche vom `MQTT IN` Node ausgeführt werden soll.
+: topic (string|object|array) : Benötigt für `"connect"`, `"disconnect"`, `"getSubscriptions"`, `"subscribe"` und `"unsubscribe"` Aktionen
 
 Letzters leitet die Konfigurations-Nachrichten an einen `MQTT In` Node weiter.
 

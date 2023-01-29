@@ -30,6 +30,7 @@
 			"name": "jack config",
 			"server": "Server",
             "port": "Port",
+            "auto-connect": "Connect automatically",
             "use-tls": "Enable secure (SSL/TLS) connection",
             "use-auth": "Use basic authentication",
             "use-context": "Copy internal context in global context"

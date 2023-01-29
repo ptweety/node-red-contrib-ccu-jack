@@ -43,6 +43,7 @@ function nodeInstance(config) {
     this.name = config.name;
     this.host = config.host;
     this.port = config.port;
+    this.autoConnect = config.autoConnect;
 
     this.consumers = {};
 
@@ -50,7 +51,7 @@ function nodeInstance(config) {
     this.contextStore = {};
     this.userStore = {};
     this.timerContextStore;
-    this.usecontext = config.usecontext;
+    this.useContext = config.useContext;
 
     this.isLocal = config.host.startsWith('127.') || config.host === 'localhost' || false;
 
@@ -103,7 +104,7 @@ function nodeInstance(config) {
             }
         }
 
-        if (this.userStore && this.usecontext) {
+        if (this.userStore && this.useContext) {
             this.userStore.ts = Date.now();
             this.globalContext.set('jack-config-' + config.id, this.userStore, (error) => {
                 if (error) this.error(error);
@@ -167,7 +168,7 @@ function nodeInstance(config) {
                 ...domainResources,
             };
 
-            if (this.usecontext)
+            if (this.useContext)
                 for (const domainResource in domainResources)
                     RED.util.setObjectProperty(
                         this.userStore,
@@ -218,6 +219,23 @@ function nodeInstance(config) {
             this.setStatus(statusTypes.ERROR);
             this.error(error);
         }
+    };
+
+    this.stop = () => {
+        this.log(`Closing connection to VEAP server (${this.host})`);
+
+        this.setContext(false);
+        this.setStatus(statusTypes.NOTCONNECTED);
+    };
+
+    this.getAllValues = () => {
+        const result = {};
+
+        for (const domain in this.contextStore.values) {
+            result[domain] = Object.fromEntries(this.contextStore.values[domain]);
+        }
+
+        return result;
     };
 
     //#region ---- Communication with child nodes ----
@@ -465,9 +483,13 @@ function nodeInstance(config) {
      */
     this.savePayload = (domain, topic, payload) => {
         if (!hasProperty(this.contextStore.values, domain)) this.contextStore.values[domain] = new Map();
+        const timestamp = Date.now();
+        if (!hasProperty(payload, 'ts')) payload.ts = timestamp;
+        if (!hasProperty(payload, 's')) payload.s = 200;
 
         if (this.contextStore.values[domain].has(topic)) {
             const item = this.contextStore.values[domain].get(topic);
+
             if (item.v === payload.v) {
                 // item resent
                 payload.cache = false;
@@ -475,7 +497,7 @@ function nodeInstance(config) {
             } else {
                 // item updated
                 payload.vP = item.v;
-                payload.tsP = item.ts;
+                payload.tsP = item.ts || timestamp;
                 payload.cache = false;
                 payload.change = true;
             }
@@ -736,7 +758,7 @@ function nodeInstance(config) {
             payload = this.savePayload(domain, topic, payload);
             const item = this.prepareReply(domain, topicParts, payload.v);
 
-            if (this.usecontext && [domainTypes.DEVICE, domainTypes.VIRTDEV].includes(domain)) {
+            if (this.useContext && [domainTypes.DEVICE, domainTypes.VIRTDEV].includes(domain)) {
                 RED.util.setObjectProperty(
                     this.userStore,
                     `${domain}.${item.device}.${item.channelIndex}.${item.datapoint}.payload`,
@@ -869,7 +891,7 @@ function nodeInstance(config) {
     //#endregion ---- Functions for child nodes ----
 
     // START NODE
-    this.start();
+    if (this.autoConnect) this.start();
 
     this.on('message', (_message, _send, done) => {
         done();
@@ -881,10 +903,7 @@ function nodeInstance(config) {
 
     // CLOSE NODE
     this.on('close', async (_removed, done) => {
-        this.log(`Closing connection to VEAP server (${this.host})`);
-
-        this.setContext(false);
-        this.setStatus(statusTypes.NOTCONNECTED);
+        this.stop();
 
         done();
     });

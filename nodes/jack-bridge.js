@@ -105,12 +105,18 @@ function nodeInstance(config) {
 
         if (message) {
             if (message.action && !message.status) {
-                if (['getSubscriptions'].includes(message.action))
+                if (message.action === 'getSubscriptions') {
                     // eslint-disable-next-line unicorn/no-null
                     send([null, { action: message.action, status: '__get' }]);
+                } else if (!this.jack.autoConnect) {
+                    if (message.action === 'connect' && !this.connected) this.jack.start();
+                    if (message.action === 'disconnect' && this.connected) this.jack.stop();
+                } else if (message.action === 'getValues')
+                    send({ topic: 'allValues', payload: this.jack.getAllValues() });
                 if (done) done();
             } else if (message.status) {
-                send({ topic: message.topic, payload: message.payload });
+                if (message.status === '__get')
+                    send({ topic: message.topic, payload: message.payload, connected: this.connected });
                 if (done) done();
             } else if (message.topic && message.payload && message.qos && message.retain) {
                 if (isValidTopic(message.topic)) this.messageQueue.push({ message, send, done });
