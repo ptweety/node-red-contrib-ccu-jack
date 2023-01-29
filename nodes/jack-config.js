@@ -9,7 +9,7 @@ const package_ = require(path.join(__dirname, '..', 'package.json'));
 const { JACK } = require('./lib/jack');
 const discover = require('./lib/discover');
 const { hasProperty, isValidTopic } = require('./lib/utils');
-const { statusTypes, statusMessages, eventTypes } = require('./lib/constants');
+const { statusTypes, statusMessages, domainTypes, eventTypes } = require('./lib/constants');
 
 const nodeConfig = {
     /** @type {runtimeRED} Reference to the master RED instance */
@@ -534,8 +534,8 @@ function nodeInstance(config) {
 
         try {
             switch (domain) {
-                case 'device':
-                case 'virtdev': {
+                case domainTypes.DEVICE:
+                case domainTypes.VIRTDEV: {
                     if (topicParts.length !== 3) return;
                     const [device, channel, datapoint] = topicParts;
                     if (!hasProperty(this.contextStore[domain], device)) return;
@@ -591,8 +591,8 @@ function nodeInstance(config) {
                     }
                     break;
                 }
-                case 'program':
-                case 'sysvar': {
+                case domainTypes.PROGRAM:
+                case domainTypes.SYSVAR: {
                     if (topicParts.length !== 1) return;
                     const [iseId] = topicParts;
                     if (!hasProperty(this.contextStore[domain], iseId)) return;
@@ -601,7 +601,7 @@ function nodeInstance(config) {
                         item[domain] = storedItem.identifier;
                         item[`${domain}Name`] = storedItem.title;
 
-                        if (domain === 'program') {
+                        if (domain === domainTypes.PROGRAM) {
                             item.active = storedItem.active;
                             item.visible = storedItem.visible;
                         } else {
@@ -736,7 +736,7 @@ function nodeInstance(config) {
             payload = this.savePayload(domain, topic, payload);
             const item = this.prepareReply(domain, topicParts, payload.v);
 
-            if (this.usecontext && ['device', 'virtdev'].includes(domain)) {
+            if (this.usecontext && [domainTypes.DEVICE, domainTypes.VIRTDEV].includes(domain)) {
                 RED.util.setObjectProperty(
                     this.userStore,
                     `${domain}.${item.device}.${item.channelIndex}.${item.datapoint}.payload`,
@@ -799,7 +799,7 @@ function nodeInstance(config) {
             const topicParts = topic ? topic.split('/') : [];
             if (topic && topicParts.length !== 5) throw new Error(`Content of topic "${topic}" invalid`);
 
-            const domains = new Set(['device', 'virtdev']);
+            const domains = new Set([domainTypes.DEVICE, domainTypes.VIRTDEV]);
 
             const [topicDomain, _, topicDevice, topicChannelIndex, topicDatapoint] = topicParts;
             const {
@@ -906,7 +906,12 @@ function nodeInstance(config) {
                     try {
                         const result = {};
 
-                        for (const domain of ['device', 'program', 'sysvar', 'virtdev']) {
+                        for (const domain of [
+                            domainTypes.DEVICE,
+                            domainTypes.PROGRAM,
+                            domainTypes.SYSVAR,
+                            domainTypes.VIRTDEV,
+                        ]) {
                             item = this.contextStore[domain]['.'];
                             result[domain] = {
                                 description: item.description,
@@ -924,7 +929,10 @@ function nodeInstance(config) {
                 case 'tree': {
                     const rQ = request.query;
                     try {
-                        const rqDomain = rQ.domain && ['device', 'virtdev'].includes(rQ.domain) ? rQ.domain : 'device';
+                        const rqDomain =
+                            rQ.domain && [domainTypes.DEVICE, domainTypes.VIRTDEV].includes(rQ.domain)
+                                ? rQ.domain
+                                : domainTypes.DEVICE;
                         const rqInterfaceType =
                             rQ.interfaceType && rQ.interfaceTypeT === 'str' ? rQ.interfaceType.split(',') : [];
                         const rqRoom = rQ.room && rQ.roomT === 'str' ? rQ.room.split(',') : [];
@@ -1001,7 +1009,7 @@ function nodeInstance(config) {
                                             matchChannel = true;
 
                                             for (const room of channelItem.rooms) {
-                                                const roomItem = this.contextStore['room'][room]['.'];
+                                                const roomItem = this.contextStore[domainTypes.ROOM][room]['.'];
 
                                                 result.room.set(roomItem.identifier, {
                                                     value: roomItem.identifier,
@@ -1010,7 +1018,8 @@ function nodeInstance(config) {
                                             }
 
                                             for (const function_ of channelItem.functions) {
-                                                const functionItem = this.contextStore['function'][function_]['.'];
+                                                const functionItem =
+                                                    this.contextStore[domainTypes.FUNCTION][function_]['.'];
 
                                                 result.function.set(functionItem.identifier, {
                                                     value: functionItem.identifier,

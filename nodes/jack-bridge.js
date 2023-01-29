@@ -1,7 +1,7 @@
 'use strict';
 
 const { isValidTopic } = require('./lib/utils');
-const { statusTypes, eventTypes } = require('./lib/constants');
+const { statusTypes, domainTypes, eventTypes } = require('./lib/constants');
 
 const nodeConfig = {
     /** @type {runtimeRED} Reference to the master RED instance */
@@ -80,7 +80,11 @@ function nodeInstance(config) {
         if (this.connected) {
             if (Array.isArray(message.domains) && message.domains.length > 0)
                 for (const domain of message.domains) {
-                    if (['device', 'program', 'sysvar', 'virtdev'].includes(domain))
+                    if (
+                        [domainTypes.DEVICE, domainTypes.PROGRAM, domainTypes.SYSVAR, domainTypes.VIRTDEV].includes(
+                            domain
+                        )
+                    )
                         this.rootDomains.add(`${domain}/#`);
                 }
 

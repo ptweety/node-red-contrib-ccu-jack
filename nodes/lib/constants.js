@@ -10,6 +10,16 @@ const statusMessages = {
     5: { fill: 'red', shape: 'ring', text: 'node-red:common.status.error' },
     6: { fill: 'green', shape: 'ring', text: 'node-red:common.status.ok' },
 };
+
+const domainTypes = {
+    DEVICE: 'device',
+    FUNCTION: 'function',
+    ROOM: 'room',
+    PROGRAM: 'program',
+    SYSVAR: 'sysvar',
+    VIRTDEV: 'virtdev',
+};
+
 const eventTypes = { ERROR: 'error', STATUS: 'status', EVENT: 'event', VALUE: 'value' };
 
-module.exports = { statusTypes, statusMessages, eventTypes };
+module.exports = { statusTypes, statusMessages, domainTypes, eventTypes };
