@@ -24,7 +24,9 @@ Verschiedene Nachrichtentypen können verarbeitet werden:
 
 #### Status
 
-: payload (boolean) : Gibt den aktuellen Status der Bridge zurück. <br> **Noch nicht implementiert!**
+: payload (boolean|string) : Gibt den aktuellen Status der Bridge zurück. <br> **Noch nicht implementiert!**
+
+Entweder bei `"getValues"`, `"getValuesFlat"` oder `"getValuesDeep"` wird der aktuelle Wert aller bisherigen MQTT Nachrichten gesendet.
 
 ### Ausgangsdaten
 

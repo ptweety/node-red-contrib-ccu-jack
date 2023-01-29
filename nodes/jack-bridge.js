@@ -111,12 +111,26 @@ function nodeInstance(config) {
                 } else if (!this.jack.autoConnect) {
                     if (message.action === 'connect' && !this.connected) this.jack.start();
                     if (message.action === 'disconnect' && this.connected) this.jack.stop();
-                } else if (message.action === 'getValues')
-                    send({ topic: 'allValues', payload: this.jack.getAllValues() });
+                }
+
                 if (done) done();
             } else if (message.status) {
-                if (message.status === '__get')
-                    send({ topic: message.topic, payload: message.payload, connected: this.connected });
+                switch (message.status) {
+                    case '__get': {
+                        send({ topic: message.topic, payload: message.payload, connected: this.connected });
+                        break;
+                    }
+                    case 'getValues':
+                    case 'getValuesFlat': {
+                        send({ topic: 'allValues', payload: this.jack.getAllValues() });
+                        break;
+                    }
+                    case 'getValuesDeep': {
+                        send({ topic: 'allValues', payload: this.jack.getAllValues(false) });
+                        break;
+                    }
+                }
+
                 if (done) done();
             } else if (message.topic && message.payload && message.qos && message.retain) {
                 if (isValidTopic(message.topic)) this.messageQueue.push({ message, send, done });

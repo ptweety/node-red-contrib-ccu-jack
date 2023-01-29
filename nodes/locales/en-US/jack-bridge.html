@@ -24,7 +24,9 @@ Different types of messages can be processed:
 
 #### Status
 
-: payload (boolean) : returns the current status of the `Jack Bridge` Node. <br> **Not yet implemented!**
+: status (boolean|string) : returns the current status of the `Jack Bridge` Node. <br> **Not yet implemented!**
+
+If it's either `"getValues"`, `"getValuesFlat"` or `"getValuesDeep"` the latest state of all received MQTT messages is sent.
 
 ### Outputs
 

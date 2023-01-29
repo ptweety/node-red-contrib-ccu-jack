@@ -228,11 +228,21 @@ function nodeInstance(config) {
         this.setStatus(statusTypes.NOTCONNECTED);
     };
 
-    this.getAllValues = () => {
+    this.getAllValues = (flatStructure = true) => {
         const result = {};
 
         for (const domain in this.contextStore.values) {
-            result[domain] = Object.fromEntries(this.contextStore.values[domain]);
+            const item = Object.fromEntries(this.contextStore.values[domain]);
+            if (flatStructure) result[domain] = Object.fromEntries(this.contextStore.values[domain]);
+            else
+                for (const topic in item) {
+                    RED.util.setObjectProperty(
+                        result,
+                        topic.replace(`status/`, '').replaceAll('/', '.'),
+                        { topic, payload: item[topic] },
+                        true
+                    );
+                }
         }
 
         return result;
