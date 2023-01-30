@@ -279,7 +279,13 @@ function nodeInstance(config) {
             callback(RED.util.cloneMessage(message));
         });
 
-        this.setStatus();
+        // this.setStatus();
+        this.events.emit(id, {
+            topic: eventTypes.STATUS,
+            payload: statusMessages[this.status],
+            status: this.status,
+            domains: this.rootDomains,
+        });
 
         return true;
     };
