@@ -1,6 +1,6 @@
 'use strict';
 
-const { isValidTopic } = require('./lib/utils');
+const { hasProperty, isValidTopic } = require('./lib/utils');
 const { statusTypes, domainTypes, eventTypes } = require('./lib/constants');
 
 const nodeConfig = {
@@ -132,7 +132,12 @@ function nodeInstance(config) {
                 }
 
                 if (done) done();
-            } else if (message.topic && message.payload && message.qos && message.retain) {
+            } else if (
+                message.topic &&
+                message.payload &&
+                hasProperty(message, 'qos') &&
+                hasProperty(message, 'retain')
+            ) {
                 if (isValidTopic(message.topic)) this.messageQueue.push({ message, send, done });
                 if (this.messageQueue.length === 1) this.handleMessageQueue(this.messageQueue[0]);
             }

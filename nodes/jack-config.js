@@ -476,7 +476,7 @@ function nodeInstance(config) {
         } catch (error) {
             this.error(
                 `getMessagePayload: ${RED._('node-red:mqtt.errors.invalid-json-parse')}` +
-                    ` - message: { ${message} } - ERROR: ${error}`
+                    ` - message: { ${message} } - ${error}`
             );
             return {};
         }
@@ -570,9 +570,10 @@ function nodeInstance(config) {
                 case domainTypes.VIRTDEV: {
                     if (topicParts.length !== 3) return;
                     const [device, channel, datapoint] = topicParts;
-                    if (!hasProperty(this.contextStore[domain], device)) return;
-                    if (!hasProperty(this.contextStore[domain][device], channel)) return;
-                    if (!hasProperty(this.contextStore[domain][device][channel], datapoint)) return;
+                    if (!hasProperty(this.contextStore[domain], device)) throw `device: ${device}`;
+                    if (!hasProperty(this.contextStore[domain][device], channel)) throw `channel: ${channel}`;
+                    if (!hasProperty(this.contextStore[domain][device][channel], datapoint))
+                        throw `datapoint: ${datapoint}`;
                     try {
                         const storedDevice = this.contextStore[domain][device]['.'] || {};
                         const storedChannel = this.contextStore[domain][device][channel]['.'] || {};
@@ -616,10 +617,7 @@ function nodeInstance(config) {
 
                         getMqttTopics(storedDatapoint);
                     } catch (error) {
-                        this.error(
-                            `onMessage: invalid or not in Cache` +
-                                ` - domain: ${domain} - device: ${device} - channel: ${channel} - datapoint: ${datapoint} - ERROR: ${error}`
-                        );
+                        throw `domain: ${domain} - ${error}`;
                     }
                     break;
                 }
@@ -643,16 +641,13 @@ function nodeInstance(config) {
 
                         getMqttTopics(storedItem);
                     } catch (error) {
-                        this.error(
-                            `onMessage: invalid or not in Cache` +
-                                ` - domain: ${domain} - iseId: ${iseId} - ERROR: ${error}`
-                        );
+                        throw `domain: ${domain} - iseId: ${iseId} - ${error}`;
                     }
                     break;
                 }
             }
         } catch (error) {
-            this.error(`onMessage: unable to find ${topicParts} in Cache - ERROR: ${error}`);
+            throw `prepareReply: unable to find ${topicParts} - ${error}`;
         }
 
         return item;
@@ -751,19 +746,19 @@ function nodeInstance(config) {
      */
     this.onMessage = (topic, message, packet, done) => {
         try {
-            if (topic && !isValidTopic(topic)) throw new Error(`Topic "${topic}" invalid`);
+            if (topic && !isValidTopic(topic)) throw `Topic "${topic}" invalid`;
 
             const topicParts = topic ? topic.split('/') : [];
             if (topic && (topicParts.length === 1 || topicParts[0] === undefined)) return;
 
             const domain = topicParts.shift();
-            if (!this.rootDomains.includes(domain)) throw new Error(`Domain "${domain}" not found`);
+            if (!this.rootDomains.includes(domain)) throw `Domain "${domain}" not found`;
 
             if (topicParts[0] === 'status') topicParts.shift();
             else return;
 
             /** @type {Payload} */ let payload = this.getPayloadFromMessage(message);
-            if (!hasProperty(payload, 'v')) throw new Error(`Content of payload invalid`);
+            if (!hasProperty(payload, 'v')) throw `Content of payload invalid`;
 
             payload = this.savePayload(domain, topic, payload);
             const item = this.prepareReply(domain, topicParts, payload.v);
@@ -810,7 +805,7 @@ function nodeInstance(config) {
                 }
             }
         } catch (error) {
-            this.error(`onMessage: unable to process inputs - ${error}`);
+            this.log(`onMessage: ${error}`);
         } finally {
             if (done) done();
         }
@@ -826,10 +821,10 @@ function nodeInstance(config) {
      */
     this.onInput = (childNodeID, topic, message, packet, done) => {
         try {
-            if (topic && !isValidTopic(topic)) throw new Error(`Topic "${topic}" invalid`);
+            if (topic && !isValidTopic(topic)) throw `Topic "${topic}" invalid`;
 
             const topicParts = topic ? topic.split('/') : [];
-            if (topic && topicParts.length !== 5) throw new Error(`Content of topic "${topic}" invalid`);
+            if (topic && topicParts.length !== 5) throw `Content of topic "${topic}" invalid`;
 
             const domains = new Set([domainTypes.DEVICE, domainTypes.VIRTDEV]);
 
@@ -843,16 +838,14 @@ function nodeInstance(config) {
 
             const domain = topicDomain && domains.has(topicDomain) ? topicDomain : packetDomain;
 
-            if (!this.rootDomains.includes(domain)) throw new Error(`Domain "${domain}" not found`);
+            if (!this.rootDomains.includes(domain)) throw `Domain "${domain}" not found`;
 
             const device = topicDevice || packetDevice;
             const channelIndex = topicChannelIndex || packetChannelIndex;
             const datapoint = topicDatapoint || packetDatapoint;
 
             if (!(device && channelIndex && datapoint))
-                throw new Error(
-                    `Either device "${device}", channelIndex "${channelIndex}" or datapoint "${datapoint}" not found`
-                );
+                throw `Either device "${device}", channelIndex "${channelIndex}" or datapoint "${datapoint}" not found`;
 
             /** @type {Payload} */ let payload;
             const statusItem = `${domain}/status/${device}/${channelIndex}/${datapoint}`;
@@ -861,7 +854,7 @@ function nodeInstance(config) {
 
             const item = this.prepareReply(domain, [device, channelIndex, datapoint], payload.v);
 
-            if (!(payload && item)) throw new Error('No values found for "' + statusItem + '" in context store');
+            if (!(payload && item)) throw `No values found for "${statusItem}" in context store`;
 
             const replyMessage = {
                 topic,
@@ -891,7 +884,7 @@ function nodeInstance(config) {
 
             if (this.consumers[childNodeID].subscriptions.has(id)) {
                 // Reply
-                this.events.emit(id, { topic, message, error: `onInput: unable to process inputs - ${error}` });
+                this.events.emit(id, { topic, message, error: `onInput: ${error}` });
             }
         } finally {
             if (done) done();
