@@ -104,14 +104,108 @@ function nodeInstance(config) {
             }
         }
 
-        if (this.userStore && this.useContext) {
-            this.userStore.ts = Date.now();
-            this.globalContext.set('jack-config-' + config.id, this.userStore, (error) => {
-                if (error) this.error(error);
+        if (this.contextStore && this.userStore && this.useContext) {
+            let userStore;
+
+            try {
+                userStore = this.globalContext.get('jack-config-' + config.id) || this.userStore;
+                userStore.ts = Date.now();
+                for (const domain of this.rootDomains) {
+                    if (!hasProperty(this.contextStore, domain)) continue;
+                    const domainItem = this.contextStore[domain];
+
+                    for (const thing in domainItem) {
+                        const thingItem = domainItem[thing];
+
+                        if (!hasProperty(userStore, domain) && hasProperty(domainItem, '.')) {
+                            const { title, description } = domainItem['.'];
+
+                            RED.util.setObjectProperty(userStore, `${domain}`, { title, description }, true);
+                        }
+
+                        if (thing === '.') continue;
+
+                        if ([domainTypes.DEVICE, domainTypes.VIRTDEV].includes(domain)) {
+                            for (const channel in thingItem) {
+                                const channelItem = thingItem[channel];
+
+                                if (!hasProperty(userStore[domain], thing) && hasProperty(thingItem, '.')) {
+                                    const { interfaceType, paramsets, title, type } = thingItem['.'];
+
+                                    RED.util.setObjectProperty(
+                                        userStore[domain],
+                                        `${thing}`,
+                                        { interfaceType, paramsets, title, type },
+                                        true
+                                    );
+                                }
+
+                                if (channel === '.') continue;
+
+                                for (const datapoint in channelItem) {
+                                    const datapointItem = channelItem[datapoint];
+
+                                    if (
+                                        !hasProperty(userStore[domain][thing], channel) &&
+                                        hasProperty(channelItem, '.')
+                                    ) {
+                                        const { direction, flags, paramsets, title, type } = channelItem['.'];
+
+                                        RED.util.setObjectProperty(
+                                            userStore[domain][thing],
+                                            `${channel}`,
+                                            { direction, flags, paramsets, title, type },
+                                            true
+                                        );
+                                    }
+
+                                    if (datapoint === '.') continue;
+
+                                    if (hasProperty(datapointItem, '.')) {
+                                        const dp = Object.assign({}, datapointItem['.']);
+
+                                        for (const notRequired of [
+                                            'id',
+                                            'identifier',
+                                            'mqttGetTopic',
+                                            'mqttSetTopic',
+                                            'mqttStatusTopic',
+                                            'tabOrder',
+                                            'title',
+                                            '~links',
+                                            '~path',
+                                        ])
+                                            delete dp[notRequired];
+                                        RED.util.setObjectProperty(
+                                            userStore[domain][thing][channel],
+                                            `${datapoint}`,
+                                            dp,
+                                            true
+                                        );
+                                    }
+                                }
+                            }
+                        } else {
+                            if (hasProperty(thingItem, '.')) {
+                                const { title } = thingItem['.'];
+
+                                RED.util.setObjectProperty(userStore, `${domain}.${thing}`, { title }, true);
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                this.debug(`Update global context failed - ${error}`);
+            } finally {
+                this.userStore = userStore;
+            }
+
+            this.globalContext.set('jack-config-' + config.id, userStore, (error) => {
+                if (error) this.debug(error);
             });
         } else {
             this.globalContext.set('jack-config-' + config.id, undefined, (error) => {
-                if (error) this.error(error);
+                if (error) this.debug(error);
             });
         }
 
@@ -120,7 +214,7 @@ function nodeInstance(config) {
         if (active) {
             this.timerContextStore = setTimeout(() => {
                 this.setContext(true);
-            }, 10_000);
+            }, 600 * 1000);
         }
     };
 
@@ -168,15 +262,6 @@ function nodeInstance(config) {
                 ...domainResources,
             };
 
-            if (this.useContext)
-                for (const domainResource in domainResources)
-                    RED.util.setObjectProperty(
-                        this.userStore,
-                        `${domainResource}`,
-                        domainResources[domainResource],
-                        true
-                    );
-
             for (const domain of rootDomains) {
                 this.contextStore[domain.identifier]['.'] = {
                     ...domain,
@@ -217,7 +302,7 @@ function nodeInstance(config) {
             this.setContext(true);
         } catch (error) {
             this.setStatus(statusTypes.ERROR);
-            this.error(error);
+            this.debug(error);
         }
     };
 
@@ -320,7 +405,7 @@ function nodeInstance(config) {
         if (!childNode) return false;
 
         if (typeof callback !== 'function') {
-            this.error('subscribe: called without callback');
+            this.debug('subscribe: called without callback');
             return false;
         }
 
@@ -355,7 +440,7 @@ function nodeInstance(config) {
 
         for (let index = 0, { length } = propertiesArray; index < length; index++) {
             if (!validFilterProperties.has(propertiesArray[index])) {
-                this.error('subscribe: called with invalid filter property ' + propertiesArray[index]);
+                this.debug('subscribe: called with invalid filter property ' + propertiesArray[index]);
                 return false;
             }
         }
@@ -480,7 +565,7 @@ function nodeInstance(config) {
                 payload = JSON.parse(message.toString());
             }
         } catch (error) {
-            this.error(
+            this.debug(
                 `getMessagePayload: ${RED._('node-red:mqtt.errors.invalid-json-parse')}` +
                     ` - message: { ${message} } - ${error}`
             );
@@ -769,15 +854,6 @@ function nodeInstance(config) {
             payload = this.savePayload(domain, topic, payload);
             const item = this.prepareReply(domain, topicParts, payload.v);
 
-            if (this.useContext && [domainTypes.DEVICE, domainTypes.VIRTDEV].includes(domain)) {
-                RED.util.setObjectProperty(
-                    this.userStore,
-                    `${domain}.${item.device}.${item.channelIndex}.${item.datapoint}.payload`,
-                    payload,
-                    true
-                );
-            }
-
             const replyMessage = {
                 topic,
                 payload: payload.v,
@@ -811,7 +887,7 @@ function nodeInstance(config) {
                 }
             }
         } catch (error) {
-            this.log(`onMessage: ${error}`);
+            this.debug(`onMessage: ${error}`);
         } finally {
             if (done) done();
         }
@@ -885,7 +961,8 @@ function nodeInstance(config) {
                 this.events.emit(id, replyMessage);
             }
         } catch (error) {
-            // this.error(`onInput: unable to process inputs - ${error}`);
+            this.debug(`onInput:  ${error}`);
+
             const id = eventTypes.ERROR + ':' + this.config.id + '_' + childNodeID;
 
             if (this.consumers[childNodeID].subscriptions.has(id)) {
