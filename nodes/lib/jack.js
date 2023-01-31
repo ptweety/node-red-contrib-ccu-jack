@@ -6,6 +6,7 @@ const { hasProperty, sortObject } = require('./utils');
 const jackUrls = {
     root: '/',
     vendor: '/~vendor',
+    refresh: '/~vendor/refresh/~pv',
     config: '/~vendor/config/~pv',
     domains: '/~query?~path=/[a-z]*',
     resources: (resource) => `/~query?~path=/${resource}/*`,
@@ -68,16 +69,16 @@ class JACK {
          * @throws API does not support SearchService. Please upgrade your CCU-Jack!
          */
         this.getConfig = async () => {
-            let root, vendor, config;
+            let root, vendor, refresh, config;
 
             try {
-                [root, vendor, config] = await Promise.all(
-                    [jackUrls.root, jackUrls.vendor, jackUrls.config].map((url) => {
+                [root, vendor, refresh, config] = await Promise.all(
+                    [jackUrls.root, jackUrls.vendor, jackUrls.refresh, jackUrls.config].map((url) => {
                         return this.api.request({ method: 'GET', url });
                     })
                 );
             } catch {
-                [root, vendor, config] = [{ '~links': [] }, {}, {}];
+                [root, vendor, refresh, config] = [{ '~links': [] }, {}, {}, {}];
             }
 
             if (!root['~links'].some((id) => id.rel === 'domain'))
@@ -89,7 +90,7 @@ class JACK {
             if (!root['~links'].some((id) => id.rel === '~service' && id.href === '~query'))
                 throw new Error('API does not support SearchService. Please upgrade your CCU-Jack!');
 
-            return [root, { vendor, config: config.v }];
+            return [root, { vendor, refresh, config: config.v }];
         };
 
         /**
