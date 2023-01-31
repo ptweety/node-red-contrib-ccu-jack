@@ -20,6 +20,8 @@ const nodeConfig = {
     development: false,
 };
 
+const i18nCatalog = '@ptweety/node-red-contrib-ccu-jack/messages:';
+
 //#endregion ----- Module level variables ---- //
 
 //#region ----- Module-level support functions ----- //
@@ -57,6 +59,8 @@ function nodeInstance(config) {
 
     this.useauth = config.useauth || false;
     this.usetls = config.usetls || false;
+
+    this.url = `http${this.usetls ? 's' : ''}://${this.host}:${this.port}`;
 
     this.username = '';
     this.password = '';
@@ -223,7 +227,7 @@ function nodeInstance(config) {
 
     // Start up prep
     this.start = async () => {
-        this.log(`Initializing connection to VEAP server (${this.host})`);
+        this.log(RED._(i18nCatalog + 'config.state.connecting', { jack: this.url }));
         this.setStatus(statusTypes.CONNECTING);
 
         try {
@@ -296,18 +300,18 @@ function nodeInstance(config) {
             }
 
             // 6. ready to connect to MQTT broker and receive updates
-            this.log('Initialized');
+            this.log(RED._(i18nCatalog + 'config.state.connected', { jack: this.url }));
             this.setStatus(statusTypes.CONNECTED);
 
             this.setContext(true);
         } catch (error) {
             this.setStatus(statusTypes.ERROR);
-            this.debug(error);
+            this.log(RED._(i18nCatalog + 'config.state.connect-failed', { jack: this.url, error }));
         }
     };
 
     this.stop = () => {
-        this.log(`Closing connection to VEAP server (${this.host})`);
+        this.log(RED._(i18nCatalog + 'config.state.disconnected', { jack: this.url }));
 
         this.setContext(false);
         this.setStatus(statusTypes.NOTCONNECTED);

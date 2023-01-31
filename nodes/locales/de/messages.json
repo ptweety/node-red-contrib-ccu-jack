@@ -38,6 +38,12 @@
         "input": {
             "name": "Name",
 			"server": "z.B. localhost | 127.0.0.1 | ip"
+        },
+        "state": {
+            "connecting": "Verbinden mit VEAP server __jack__",
+            "connected": "Verbindung zu VEAP server __jack__ aufgebaut",
+            "disconnected": "Verbindung zu VEAP server __jack__ abgebaut",
+            "connect-failed": "Verbindung zu VEAP server __jack__ gescheitern mit __error__"
         }
 	},
     "bridge": {
