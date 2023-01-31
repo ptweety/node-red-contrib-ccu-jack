@@ -22,7 +22,8 @@ function nodeInstance(config) {
     }
 
     RED.nodes.eachNode((n) => {
-        if (n.type === this.type && n.id !== this.id && n.jack === this.jack.id) {
+        if (n.d || n.type !== this.type) return;
+        if (n.id !== this.id && n.jack === this.jack.id) {
             this.error(
                 `Another [${n.type}:${n.id}] was found, using the same [${this.jack.type}:${this.jack.id}] known as "${this.jack.name}". This may lead to problems and should be avoided!`
             );
