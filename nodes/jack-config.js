@@ -52,6 +52,7 @@ function nodeInstance(config) {
     this.globalContext = this.context().global;
     this.contextStore = {};
     this.userStore = {};
+    this.userStoreName = config.type + '-' + config.id;
     this.timerContextStore;
     this.useContext = config.useContext;
 
@@ -91,175 +92,27 @@ function nodeInstance(config) {
 
     this.jack = new JACK(this.options);
 
-    this.rootDomains = [];
+    this.rootDomains = new Set();
 
     this.subscriptionId = 0;
 
     /**
-     * Save contextStore to global context
-     * @param {boolean} active - start update timer on request
+     * Refresh contextStore
      * @returns {void}
      */
-    this.setContext = (active) => {
-        if (this.contextStore) {
-            this.contextStore.ts = Date.now();
-            if (nodeConfig.development) {
-                console.dir(this.contextStore);
-            }
-        }
-
-        if (this.contextStore && this.userStore && this.useContext) {
-            let userStore;
-
-            try {
-                userStore = this.globalContext.get('jack-config-' + config.id) || this.userStore;
-                userStore.ts = Date.now();
-                for (const domain of this.rootDomains) {
-                    if (!hasProperty(this.contextStore, domain)) continue;
-                    const domainItem = this.contextStore[domain];
-
-                    for (const thing in domainItem) {
-                        const thingItem = domainItem[thing];
-
-                        if (!hasProperty(userStore, domain) && hasProperty(domainItem, '.')) {
-                            const { title, description } = domainItem['.'];
-
-                            RED.util.setObjectProperty(userStore, `${domain}`, { title, description }, true);
-                        }
-
-                        if (thing === '.') continue;
-
-                        if ([domainTypes.DEVICE, domainTypes.VIRTDEV].includes(domain)) {
-                            for (const channel in thingItem) {
-                                const channelItem = thingItem[channel];
-
-                                if (!hasProperty(userStore[domain], thing) && hasProperty(thingItem, '.')) {
-                                    const { interfaceType, paramsets, title, type } = thingItem['.'];
-
-                                    RED.util.setObjectProperty(
-                                        userStore[domain],
-                                        `${thing}`,
-                                        { interfaceType, paramsets, title, type },
-                                        true
-                                    );
-                                }
-
-                                if (channel === '.') continue;
-
-                                for (const datapoint in channelItem) {
-                                    const datapointItem = channelItem[datapoint];
-
-                                    if (
-                                        !hasProperty(userStore[domain][thing], channel) &&
-                                        hasProperty(channelItem, '.')
-                                    ) {
-                                        const { direction, flags, paramsets, title, type } = channelItem['.'];
-
-                                        RED.util.setObjectProperty(
-                                            userStore[domain][thing],
-                                            `${channel}`,
-                                            { direction, flags, paramsets, title, type },
-                                            true
-                                        );
-                                    }
-
-                                    if (datapoint === '.') continue;
-
-                                    if (hasProperty(datapointItem, '.')) {
-                                        const dp = Object.assign({}, datapointItem['.']);
-
-                                        for (const notRequired of [
-                                            'id',
-                                            'identifier',
-                                            'mqttGetTopic',
-                                            'mqttSetTopic',
-                                            'mqttStatusTopic',
-                                            'tabOrder',
-                                            'title',
-                                            '~links',
-                                            '~path',
-                                        ])
-                                            delete dp[notRequired];
-                                        RED.util.setObjectProperty(
-                                            userStore[domain][thing][channel],
-                                            `${datapoint}`,
-                                            dp,
-                                            true
-                                        );
-                                    }
-                                }
-                            }
-                        } else {
-                            if (hasProperty(thingItem, '.')) {
-                                const { title } = thingItem['.'];
-
-                                RED.util.setObjectProperty(userStore, `${domain}.${thing}`, { title }, true);
-                            }
-                        }
-                    }
-                }
-            } catch (error) {
-                this.debug(`Update global context failed - ${error}`);
-            } finally {
-                this.userStore = userStore;
-            }
-
-            this.globalContext.set('jack-config-' + config.id, userStore, (error) => {
-                if (error) this.debug(error);
-            });
-        } else {
-            this.globalContext.set('jack-config-' + config.id, undefined, (error) => {
-                if (error) this.debug(error);
-            });
-        }
-
-        if (this.timerContextStore !== null) clearTimeout(this.timerContextStore);
-
-        if (active) {
-            this.timerContextStore = setTimeout(() => {
-                this.setContext(true);
-            }, 600 * 1000);
-        }
-    };
-
-    // Set initial Context
-    this.setContext(false);
-
-    // Start up prep
-    this.start = async () => {
-        this.log(RED._(i18nCatalog + 'config.state.connecting', { jack: this.url }));
-        this.setStatus(statusTypes.CONNECTING);
-
+    this.refreshContextStore = async () => {
         try {
-            this.network.discover = await discover();
-
-            // 0. check minimal configuration
-            if (!this.host || !this.port) throw 'Invalid host or port';
-
-            // 1. check general connectivity to the VEAP server
-            this.debug('Requesting configuration');
-            const [root, vendor] = await this.jack.getConfig();
-
-            this.contextStore = {
-                values: {},
-                ...this.contextStore,
-                '.': root,
-                '.vendor': vendor,
-                ts: Date.now(),
-                status: Object.keys(statusTypes).find((key) => statusTypes[key] === this.status),
-            };
-
-            // 2. get information about the available domains
+            // 3. get information about the available domains
             this.debug('Requesting domains');
             const rootDomains = await this.jack.getDomains();
 
             for (const domain of rootDomains) {
-                this.rootDomains.push(domain.identifier);
+                this.rootDomains.add(domain.identifier);
             }
 
-            // 3. follow the ~links of each domain and gather more data
+            // 4. follow the ~links of each domain and gather more data
             this.debug('Requesting resources');
-            const [domainChildren, domainResources] = await this.jack.getDomainResources(this.rootDomains);
+            const [domainChildren, domainResources] = await this.jack.getDomainResources([...this.rootDomains]);
 
             this.contextStore = {
                 ...this.contextStore,
@@ -273,7 +126,7 @@ function nodeInstance(config) {
                 };
             }
 
-            // 4. follow the ~links of each device and gather channels
+            // 5. follow the ~links of each device and gather channels
             this.debug('Requesting channels');
             const deviceChannels = await this.jack.getDeviceChannels();
             for (const domain of Object.keys(deviceChannels)) {
@@ -285,7 +138,7 @@ function nodeInstance(config) {
                 }
             }
 
-            // 5. follow the ~links of each channel and gather datapoints
+            // 6. follow the ~links of each channel and gather datapoints
             this.debug('Requesting datapoints');
             const channelDatapoints = await this.jack.getChannelDatapoints();
             for (const domain of Object.keys(channelDatapoints)) {
@@ -298,8 +151,208 @@ function nodeInstance(config) {
                     }
                 }
             }
+        } catch (error) {
+            throw `refreshContextStore: ${error}`;
+        }
+    };
 
-            // 6. ready to connect to MQTT broker and receive updates
+    /**
+     * Refresh userStore
+     * @param {object} userStore - current userStore
+     * @returns {object} new userStore
+     */
+    this.refreshUserStore = (userStore) => {
+        try {
+            userStore.ts = Date.now();
+            for (const domain of this.rootDomains) {
+                if (!hasProperty(this.contextStore, domain)) continue;
+                const domainItem = this.contextStore[domain];
+
+                for (const thing in domainItem) {
+                    const thingItem = domainItem[thing];
+
+                    if (!hasProperty(userStore, domain) && hasProperty(domainItem, '.')) {
+                        const { title, description } = domainItem['.'];
+
+                        RED.util.setObjectProperty(userStore, `${domain}`, { title, description }, true);
+                    }
+
+                    if (thing === '.') continue;
+
+                    if ([domainTypes.DEVICE, domainTypes.VIRTDEV].includes(domain)) {
+                        for (const channel in thingItem) {
+                            const channelItem = thingItem[channel];
+
+                            if (!hasProperty(userStore[domain], thing) && hasProperty(thingItem, '.')) {
+                                const { interfaceType, paramsets, title, type } = thingItem['.'];
+
+                                RED.util.setObjectProperty(
+                                    userStore[domain],
+                                    `${thing}`,
+                                    { interfaceType, paramsets, title, type },
+                                    true
+                                );
+                            }
+
+                            if (channel === '.') continue;
+
+                            for (const datapoint in channelItem) {
+                                const datapointItem = channelItem[datapoint];
+
+                                if (!hasProperty(userStore[domain][thing], channel) && hasProperty(channelItem, '.')) {
+                                    const { direction, flags, paramsets, title, type } = channelItem['.'];
+
+                                    RED.util.setObjectProperty(
+                                        userStore[domain][thing],
+                                        `${channel}`,
+                                        { direction, flags, paramsets, title, type },
+                                        true
+                                    );
+                                }
+
+                                if (datapoint === '.') continue;
+
+                                if (hasProperty(datapointItem, '.')) {
+                                    const dp = Object.assign({}, datapointItem['.']);
+
+                                    for (const notRequired of [
+                                        'id',
+                                        'identifier',
+                                        'mqttGetTopic',
+                                        'mqttSetTopic',
+                                        'mqttStatusTopic',
+                                        'tabOrder',
+                                        'title',
+                                        '~links',
+                                        '~path',
+                                    ])
+                                        delete dp[notRequired];
+                                    RED.util.setObjectProperty(
+                                        userStore[domain][thing][channel],
+                                        `${datapoint}`,
+                                        dp,
+                                        true
+                                    );
+                                }
+                            }
+                        }
+                    } else {
+                        if (hasProperty(thingItem, '.')) {
+                            const { title } = thingItem['.'];
+
+                            RED.util.setObjectProperty(userStore, `${domain}.${thing}`, { title }, true);
+                        }
+                    }
+                }
+            }
+        } catch (error) {
+            throw `refreshUserStore: ${error}`;
+        }
+
+        return userStore;
+    };
+
+    /**
+     * Set contextStore and save updated userStore to global context
+     * @param {boolean} active - start update timer on request
+     * @returns {void}
+     */
+    this.setContext = async (active) => {
+        const currentTimestamp = Date.now();
+
+        if (this.timerContextStore !== null) clearTimeout(this.timerContextStore);
+
+        if (active && this.contextStore) {
+            const contextStoreOutdated = this.contextStore.ts
+                ? (currentTimestamp - this.contextStore.ts) / 1000 > 60
+                : true;
+
+            if (contextStoreOutdated) {
+                // 1. request update
+                this.debug('Requesting new configuration');
+                const [_, vendor] = await this.jack.getConfig();
+                const jackOutdated = this.contextStore['.vendor'].refresh.ts - vendor.refresh.ts !== 0;
+
+                if (jackOutdated) {
+                    try {
+                        // 3. - 6.
+                        await this.refreshContextStore();
+
+                        if (this.status !== statusTypes.CONNECTED) {
+                            // 7. ready to re-connect to MQTT broker and receive updates
+                            this.log(RED._(i18nCatalog + 'config.state.connected', { jack: this.url }));
+                            this.setStatus(statusTypes.CONNECTED);
+                        }
+                    } catch (error) {
+                        this.setStatus(statusTypes.ERROR);
+                        this.log(RED._(i18nCatalog + 'config.state.connect-failed', { jack: this.url, error }));
+                    } finally {
+                        this.contextStore.ts = currentTimestamp;
+                    }
+                } else this.contextStore.ts = currentTimestamp;
+            }
+
+            const userStoreOutdated = this.userStore.ts ? this.contextStore.ts - this.userStore.ts > 0 : true;
+
+            if (this.useContext && userStoreOutdated) {
+                try {
+                    let userStore = this.globalContext.get(this.userStoreName) || this.userStore;
+                    userStore = this.refreshUserStore(userStore);
+                    this.userStore = userStore;
+                } catch (error) {
+                    this.debug(`Updating global context failed - ${error}`);
+                } finally {
+                    this.globalContext.set(this.userStoreName, this.userStore, (error) => {
+                        if (error) this.debug(error);
+                    });
+                }
+            } else {
+                this.globalContext.set(this.userStoreName, undefined, (error) => {
+                    if (error) this.debug(error);
+                });
+            }
+
+            if (nodeConfig.development) {
+                console.dir(this.contextStore);
+            }
+        }
+
+        if (active) {
+            this.timerContextStore = setTimeout(() => {
+                this.setContext(true);
+            }, 600 * 1000);
+        }
+    };
+
+    // Start up prep
+    this.start = async (callback) => {
+        this.log(RED._(i18nCatalog + 'config.state.connecting', { jack: this.url }));
+        this.setStatus(statusTypes.CONNECTING);
+
+        try {
+            this.network.discover = await discover();
+
+            // 0. check minimal configuration
+            if (!this.host || !this.port) throw 'Invalid host or port';
+
+            // 1. check general connectivity to the VEAP server
+            this.debug('Requesting configuration');
+            const [root, vendor] = await this.jack.getConfig();
+
+            // 2. initialize contextStore
+            this.contextStore = {
+                values: {},
+                ...this.contextStore,
+                '.': root,
+                '.vendor': vendor,
+                ts: Date.now(),
+                status: Object.keys(statusTypes).find((key) => statusTypes[key] === this.status),
+            };
+
+            // 3. - 6.
+            await this.refreshContextStore();
+
+            // 7. ready to connect to MQTT broker and receive updates
             this.log(RED._(i18nCatalog + 'config.state.connected', { jack: this.url }));
             this.setStatus(statusTypes.CONNECTED);
 
@@ -307,34 +360,20 @@ function nodeInstance(config) {
         } catch (error) {
             this.setStatus(statusTypes.ERROR);
             this.log(RED._(i18nCatalog + 'config.state.connect-failed', { jack: this.url, error }));
+        } finally {
+            if (callback) callback();
         }
     };
 
-    this.stop = () => {
-        this.log(RED._(i18nCatalog + 'config.state.disconnected', { jack: this.url }));
+    this.stop = (callback) => {
+        if ([statusTypes.CONNECTED || statusTypes.CONNECTING].includes(this.status)) {
+            this.log(RED._(i18nCatalog + 'config.state.disconnected', { jack: this.url }));
 
-        this.setContext(false);
-        this.setStatus(statusTypes.NOTCONNECTED);
-    };
-
-    this.getAllValues = (flatStructure = true) => {
-        const result = {};
-
-        for (const domain in this.contextStore.values) {
-            const item = Object.fromEntries(this.contextStore.values[domain]);
-            if (flatStructure) result[domain] = Object.fromEntries(this.contextStore.values[domain]);
-            else
-                for (const topic in item) {
-                    RED.util.setObjectProperty(
-                        result,
-                        topic.replace(`status/`, '').replaceAll('/', '.'),
-                        { topic, payload: item[topic] },
-                        true
-                    );
-                }
+            this.setContext(false);
+            this.setStatus(statusTypes.NOTCONNECTED);
         }
 
-        return result;
+        if (callback) callback();
     };
 
     //#region ---- Communication with child nodes ----
@@ -373,7 +412,8 @@ function nodeInstance(config) {
             topic: eventTypes.STATUS,
             payload: statusMessages[this.status],
             status: this.status,
-            domains: this.rootDomains,
+            domains: [...this.rootDomains],
+            context: this.useContext ? this.userStoreName : undefined,
         });
 
         return true;
@@ -384,13 +424,13 @@ function nodeInstance(config) {
      * @param childNode
      * @returns {boolean}
      */
-    this.deregister = (childNode) => {
+    this.deregister = (childNode, callback) => {
         if (this.consumers[childNode.id]) {
             for (const id of this.consumers[childNode.id].subscriptions) this.unsubscribe(id);
             delete this.consumers[childNode.id];
-            return true;
         }
-        return false;
+
+        if (callback) callback();
     };
 
     /**
@@ -492,7 +532,8 @@ function nodeInstance(config) {
                     topic: eventTypes.STATUS,
                     payload: statusMessages[this.status],
                     status: this.status,
-                    domains: this.rootDomains,
+                    domains: [...this.rootDomains],
+                    context: this.useContext ? this.userStoreName : undefined,
                 });
         }
     };
@@ -500,6 +541,26 @@ function nodeInstance(config) {
     //#endregion ---- Communication with child nodes ----
 
     //#region ---- Functions for child nodes ----
+
+    this.getAllValues = (flatStructure = true) => {
+        const result = {};
+
+        for (const domain in this.contextStore.values) {
+            const item = Object.fromEntries(this.contextStore.values[domain]);
+            if (flatStructure) result[domain] = Object.fromEntries(this.contextStore.values[domain]);
+            else
+                for (const topic in item) {
+                    RED.util.setObjectProperty(
+                        result,
+                        topic.replace(`status/`, '').replaceAll('/', '.'),
+                        { topic, payload: item[topic] },
+                        true
+                    );
+                }
+        }
+
+        return result;
+    };
 
     /**
      * A string in one of these formats:
@@ -847,7 +908,7 @@ function nodeInstance(config) {
             if (topic && (topicParts.length === 1 || topicParts[0] === undefined)) return;
 
             const domain = topicParts.shift();
-            if (!this.rootDomains.includes(domain)) throw `Domain "${domain}" not found`;
+            if (this.rootDomains && !this.rootDomains.has(domain)) throw `Domain "${domain}" not found`;
 
             if (topicParts[0] === 'status') topicParts.shift();
             else return;
@@ -924,7 +985,7 @@ function nodeInstance(config) {
 
             const domain = topicDomain && domains.has(topicDomain) ? topicDomain : packetDomain;
 
-            if (!this.rootDomains.includes(domain)) throw `Domain "${domain}" not found`;
+            if (this.rootDomains && !this.rootDomains.has(domain)) throw `Domain "${domain}" not found`;
 
             const device = topicDevice || packetDevice;
             const channelIndex = topicChannelIndex || packetChannelIndex;
@@ -981,7 +1042,12 @@ function nodeInstance(config) {
     //#endregion ---- Functions for child nodes ----
 
     // START NODE
+
+    // Set initial Context
+    this.setContext(false);
+
     if (this.autoConnect) this.start();
+    else this.setStatus(statusTypes.NOTCONNECTED);
 
     this.on('message', (_message, _send, done) => {
         done();
@@ -992,10 +1058,8 @@ function nodeInstance(config) {
     });
 
     // CLOSE NODE
-    this.on('close', async (_removed, done) => {
+    this.on('close', async () => {
         this.stop();
-
-        done();
     });
 
     //#region ---- Communication with editor ----

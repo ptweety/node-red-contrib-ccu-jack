@@ -65,8 +65,11 @@ function nodeInstance(config) {
         this.send(message);
     });
 
-    this.on('close', () => {
-        this.jack.deregister(this);
+    this.on('close', (done) => {
+        if (this.jack) {
+            this.jack.deregister(this, done);
+            this.jack = undefined;
+        } else done();
     });
 }
 

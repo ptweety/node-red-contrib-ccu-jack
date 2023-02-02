@@ -99,8 +99,11 @@ function nodeInstance(config) {
         } else if (done) done();
     });
 
-    this.on('close', () => {
-        this.jack.deregister(this);
+    this.on('close', (done) => {
+        if (this.jack) {
+            this.jack.deregister(this, done);
+            this.jack = undefined;
+        } else done();
     });
 }
 

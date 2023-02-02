@@ -89,13 +89,23 @@ function nodeInstance(config) {
                         this.rootDomains.add(`${domain}/#`);
                 }
 
-            // eslint-disable-next-line unicorn/no-null
-            this.send([null, [{ action: 'connect' }, { topic: [...this.rootDomains], action: 'subscribe' }]]);
+            this.send([
+                {
+                    topic: 'subscribe',
+                    payload: undefined,
+                    ...(message.context && { context: message.context }),
+                    connected: this.connected,
+                },
+                [{ action: 'connect' }, { topic: [...this.rootDomains], action: 'subscribe' }],
+            ]);
             this.handleMessageQueue();
         } else {
             if (this.rootDomains.length > 0)
                 // eslint-disable-next-line unicorn/no-null
-                this.send([null, { topic: [...this.rootDomains], action: 'unsubscribe' }]);
+                this.send([
+                    { topic: 'unsubscribe', payload: undefined, connected: this.connected },
+                    { topic: [...this.rootDomains], action: 'unsubscribe' },
+                ]);
         }
         // this.send(message);
     });
@@ -109,12 +119,11 @@ function nodeInstance(config) {
                 if (message.action === 'getSubscriptions') {
                     // eslint-disable-next-line unicorn/no-null
                     send([null, { action: message.action, status: '__get' }]);
+                    if (done) done();
                 } else if (!this.jack.autoConnect) {
-                    if (message.action === 'connect' && !this.connected) this.jack.start();
-                    if (message.action === 'disconnect' && this.connected) this.jack.stop();
+                    if (message.action === 'connect' && !this.connected) this.jack.start(done);
+                    if (message.action === 'disconnect' && this.connected) this.jack.stop(done);
                 }
-
-                if (done) done();
             } else if (message.status) {
                 switch (message.status) {
                     case '__get': {
@@ -123,11 +132,11 @@ function nodeInstance(config) {
                     }
                     case 'getValues':
                     case 'getValuesFlat': {
-                        send({ topic: 'allValues', payload: this.jack.getAllValues() });
+                        send({ topic: 'allValues', payload: this.jack.getAllValues(), connected: this.connected });
                         break;
                     }
                     case 'getValuesDeep': {
-                        send({ topic: 'allValues', payload: this.jack.getAllValues(false) });
+                        send({ topic: 'allValues', payload: this.jack.getAllValues(false), connected: this.connected });
                         break;
                     }
                 }
@@ -145,12 +154,15 @@ function nodeInstance(config) {
         } else if (done) done();
     });
 
-    this.on('close', () => {
-        if (this.rootDomains.length > 0)
-            // eslint-disable-next-line unicorn/no-null
-            this.send([null, { topic: this.rootDomains, action: 'unsubscribe' }]);
+    this.on('close', (done) => {
+        if (this.jack) {
+            if (this.rootDomains.length > 0)
+                // eslint-disable-next-line unicorn/no-null
+                this.send([null, { topic: this.rootDomains, action: 'unsubscribe' }]);
 
-        this.jack.deregister(this);
+            this.jack.deregister(this, done);
+            this.jack = undefined;
+        } else done();
     });
 }
 
