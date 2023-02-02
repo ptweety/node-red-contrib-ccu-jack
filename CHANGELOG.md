@@ -2,8 +2,23 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v0.0.9](https://github.com/ptweety/node-red-contrib-ccu-jack/compare/v0.0.8...v0.0.9)
+
+- fix: add status message if connecting to jack-bridge [`19b04d6`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/19b04d68a45d77c5eef61dcec0f163733844e295)
+- fix: jack tests [`7d45e79`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/7d45e7960d38bf70cd680ecc8e0b3903d64f8158)
+- refactor: status handling and start/stop behavior [`9115742`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/911574275f29acfa229387e9d81201115a4c2cbd)
+- docs: i18n for some error messages in jack-config [`0446865`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/0446865e64d4fc548dd2ba5d3391c5d1c3210c09)
+- feat: prepare usage of jacks refresh information [`487593a`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/487593adca724f604151a4f1d7dc413072703311)
+- fix: improve duplicate check in jack-bridge [`b2abc41`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/b2abc419306e0f59a73f4712a2154ebc4cd71d0b)
+- fix: restructure output in global context [`8fbeadd`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/8fbeadd850208c5f3071c017537120a389285c15)
+- fix: limit internal status events on deploy [`1847283`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/184728301cb3615d2f247b94a2f38e201b6a592b)
+- fix: messages with retain false and error handling [`8c1a2ac`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/8c1a2ac52e5fe64e5616f3dd5e8435516d1690b9)
+
 #### [v0.0.8](https://github.com/ptweety/node-red-contrib-ccu-jack/compare/v0.0.7...v0.0.8)
 
+> 29 January 2023
+
+- chore: bump version to 0.0.8 [`9626f86`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/9626f86f950cf6e43fddc1e86bb0d4777257302c)
 - feat: add getValues* status options to jack-bridge [`434a1b3`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/434a1b386522f584ed5f0472d85e47e230e5172c)
 - feat: add option to disable auto connect [`c33796e`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/c33796ec5b2dbffd8a988778a311cc4826b0dae2)
 - docs: update examples [`80ab43f`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/80ab43f99d2a59c791b2febd84a58c53fb80ea6c)
