@@ -36,6 +36,12 @@ module.exports = {
             { rel: 'collection', href: '..', title: 'Root' },
         ],
     },
+    // '/~vendor/refresh/~pv'
+    refresh: {
+        ts: -6_795_364_578_871,
+        v: false,
+        s: 0,
+    },
     // '/~vendor/config/~pv'
     config: {
         v: {

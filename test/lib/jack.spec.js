@@ -41,6 +41,8 @@ describe('jack', () => {
                 .reply(200, testData['root'])
                 .onGet(baseUrl + jackUrls.vendor)
                 .reply(200, testData['vendor'])
+                .onGet(baseUrl + jackUrls.refresh)
+                .reply(200, testData['refresh'])
                 .onGet(baseUrl + jackUrls.config)
                 .reply(200, testData['config']);
 
@@ -51,10 +53,15 @@ describe('jack', () => {
             expect(mock.history.get[0].baseURL).toEqual(baseUrl);
             expect(mock.history.get[0].url).toEqual(jackUrls.root);
             expect(mock.history.get[1].url).toEqual(jackUrls.vendor);
-            expect(mock.history.get[2].url).toEqual(jackUrls.config);
+            expect(mock.history.get[2].url).toEqual(jackUrls.refresh);
+            expect(mock.history.get[3].url).toEqual(jackUrls.config);
 
             expect(root).toEqual(testData['root']);
-            expect(vendor).toEqual({ vendor: testData['vendor'], config: testData['config'].v });
+            expect(vendor).toEqual({
+                vendor: testData['vendor'],
+                refresh: testData['refresh'],
+                config: testData['config'].v,
+            });
             // expect(config.v).toEqual(testData['config'].v);
         });
 
@@ -170,6 +177,8 @@ describe('jack', () => {
                 })
                 .onGet(baseUrl + jackUrls.vendor)
                 .replyOnce(200, {})
+                .onGet(baseUrl + jackUrls.refresh)
+                .replyOnce(200, {})
                 .onGet(baseUrl + jackUrls.config)
                 .replyOnce(200, {});
             await expect(jack.getConfig()).rejects.toThrow('No domains found in VAEP server response.');
@@ -185,6 +194,8 @@ describe('jack', () => {
                     ],
                 })
                 .onGet(baseUrl + jackUrls.vendor)
+                .replyOnce(200, {})
+                .onGet(baseUrl + jackUrls.refresh)
                 .replyOnce(200, {})
                 .onGet(baseUrl + jackUrls.config)
                 .replyOnce(200, {});
@@ -203,6 +214,8 @@ describe('jack', () => {
                     ],
                 })
                 .onGet(baseUrl + jackUrls.vendor)
+                .replyOnce(200, {})
+                .onGet(baseUrl + jackUrls.refresh)
                 .replyOnce(200, {})
                 .onGet(baseUrl + jackUrls.config)
                 .replyOnce(200, {});
