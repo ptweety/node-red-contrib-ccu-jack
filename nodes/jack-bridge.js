@@ -78,7 +78,13 @@ function nodeInstance(config) {
         this.connected = message.status === statusTypes.CONNECTED ? true : false;
         this.status(this.statusMessage);
 
-        if (this.connected) {
+        if (message.status === statusTypes.CONNECTING) {
+            this.send({
+                topic: 'connecting',
+                ...(message.context && { context: message.context }),
+                connected: this.connected,
+            });
+        } else if (this.connected) {
             if (Array.isArray(message.domains) && message.domains.length > 0)
                 for (const domain of message.domains) {
                     if (
@@ -91,8 +97,7 @@ function nodeInstance(config) {
 
             this.send([
                 {
-                    topic: 'subscribe',
-                    payload: undefined,
+                    topic: 'connected',
                     ...(message.context && { context: message.context }),
                     connected: this.connected,
                 },
@@ -103,7 +108,7 @@ function nodeInstance(config) {
             if (this.rootDomains.length > 0)
                 // eslint-disable-next-line unicorn/no-null
                 this.send([
-                    { topic: 'unsubscribe', payload: undefined, connected: this.connected },
+                    { topic: 'disconnected', connected: this.connected },
                     { topic: [...this.rootDomains], action: 'unsubscribe' },
                 ]);
         }
