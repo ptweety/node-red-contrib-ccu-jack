@@ -268,10 +268,16 @@ function nodeInstance(config) {
                 : true;
 
             if (contextStoreOutdated) {
+                let jackOutdated = false;
+
                 // 1. request update
                 this.debug('Requesting new configuration');
-                const [_, vendor] = await this.jack.getConfig();
-                const jackOutdated = this.contextStore['.vendor'].refresh.ts - vendor.refresh.ts !== 0;
+                try {
+                    const [_, vendor] = await this.jack.getConfig();
+                    jackOutdated = this.contextStore['.vendor'].refresh.ts - vendor.refresh.ts !== 0;
+                } catch {
+                    //
+                }
 
                 if (jackOutdated) {
                     try {
@@ -645,9 +651,10 @@ function nodeInstance(config) {
      * @param {string} domain
      * @param {string[]} topicParts
      * @param {Payload} payload
+     * @param {object} packet
      * @returns {object} mutated payload in contextStore
      */
-    this.savePayload = (domain, topic, payload) => {
+    this.savePayload = (domain, topic, payload, packet) => {
         if (!hasProperty(this.contextStore.values, domain)) this.contextStore.values[domain] = new Map();
         const timestamp = Date.now();
         if (!hasProperty(payload, 'ts')) payload.ts = timestamp;
@@ -671,8 +678,13 @@ function nodeInstance(config) {
             // new item
             payload.vP;
             payload.tsP;
-            payload.cache = true;
-            payload.change = false;
+            if (hasProperty(packet, 'retain') && packet.retain === false) {
+                payload.cache = false;
+                payload.change = true;
+            } else {
+                payload.cache = true;
+                payload.change = false;
+            }
         }
         this.contextStore.values[domain].set(topic, payload);
 
@@ -916,7 +928,7 @@ function nodeInstance(config) {
             /** @type {Payload} */ let payload = this.getPayloadFromMessage(message);
             if (!hasProperty(payload, 'v')) throw `Content of payload invalid`;
 
-            payload = this.savePayload(domain, topic, payload);
+            payload = this.savePayload(domain, topic, payload, packet);
             const item = this.prepareReply(domain, topicParts, payload.v);
 
             const replyMessage = {
