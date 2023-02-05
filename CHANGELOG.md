@@ -2,8 +2,18 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v0.0.10](https://github.com/ptweety/node-red-contrib-ccu-jack/compare/v0.0.9...v0.0.10)
+
+- chore: update dependencies [`6da87b8`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/6da87b8013ad82afdc76ba93b391dbdc0daa7e45)
+- refactor: move on change handler [`0e904fd`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/0e904fd97f057b4ce0808dd2dd139b3787029404)
+- fix: internal event handling on re-deploy [`b1763e7`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/b1763e70b7d2e998229c7500b4c000e0258b68fe)
+- fix: handle new message with retain false [`e0c3374`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/e0c3374461a8e774d5b28d23e3cb876b38357b4e)
+
 #### [v0.0.9](https://github.com/ptweety/node-red-contrib-ccu-jack/compare/v0.0.8...v0.0.9)
 
+> 2 February 2023
+
+- chore: bump version to 0.0.9 [`d71cbc4`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/d71cbc451821cfd4a945c15dbe4c58217b27a5b6)
 - fix: add status message if connecting to jack-bridge [`19b04d6`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/19b04d68a45d77c5eef61dcec0f163733844e295)
 - fix: jack tests [`7d45e79`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/7d45e7960d38bf70cd680ecc8e0b3903d64f8158)
 - refactor: status handling and start/stop behavior [`9115742`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/911574275f29acfa229387e9d81201115a4c2cbd)
