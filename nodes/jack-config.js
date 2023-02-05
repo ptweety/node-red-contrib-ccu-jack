@@ -432,7 +432,7 @@ function nodeInstance(config) {
      */
     this.deregister = (childNode, callback) => {
         if (this.consumers[childNode.id]) {
-            for (const id of this.consumers[childNode.id].subscriptions) this.unsubscribe(id);
+            for (const id of this.consumers[childNode.id].subscriptions) this.events.removeAllListeners(id);
             delete this.consumers[childNode.id];
         }
 
@@ -506,16 +506,6 @@ function nodeInstance(config) {
             callback(RED.util.cloneMessage(message));
         });
 
-        return true;
-    };
-
-    /**
-     * Un-Subscribe a child from this node
-     * @param subscriptionId
-     * @returns {boolean}
-     */
-    this.unsubscribe = (subscriptionId) => {
-        this.events.removeListener(subscriptionId);
         return true;
     };
 
