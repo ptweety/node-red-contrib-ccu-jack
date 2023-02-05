@@ -358,10 +358,8 @@
                         });
                     }
                 }
-            });
 
-            $('.node-typed-input-property-value').on('change', (/* event, type, value */) => {
-                refreshDeviceTree();
+                $(this).on('change', (/* event, type, value */) => refreshDeviceTree());
             });
         },
         oneditsave: function () {
