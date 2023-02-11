@@ -998,34 +998,35 @@ function nodeInstance(config) {
 
             /** @type {Payload} */ let payload;
             const statusItem = `${domain}/status/${device}/${channelIndex}/${datapoint}`;
-            if (this.contextStore.values[domain].has(statusItem))
+            if (this.contextStore.values[domain].has(statusItem)) {
                 payload = this.contextStore.values[domain].get(statusItem);
 
-            const item = this.prepareReply(domain, [device, channelIndex, datapoint], payload.v);
+                const item = this.prepareReply(domain, [device, channelIndex, datapoint], payload.v);
 
-            if (!(payload && item)) throw `No values found for "${statusItem}" in context store`;
+                const replyMessage = {
+                    topic,
+                    payload: message,
+                    ...item,
+                    value: payload.v,
+                    valuePrevious: payload.vP,
+                    qos: payload.qos || 0,
+                    retain: payload.retain || false,
+                    ts: payload.ts || Date.now(),
+                    tsPrevious: payload.tsP,
+                    s: payload.s || 0,
+                    change: payload.change,
+                    cache: payload.cache,
+                    source: 'onInput',
+                };
 
-            const replyMessage = {
-                topic,
-                payload: message,
-                ...item,
-                value: payload.v,
-                valuePrevious: payload.vP,
-                qos: payload.qos || 0,
-                retain: payload.retain || false,
-                ts: payload.ts || Date.now(),
-                tsPrevious: payload.tsP,
-                s: payload.s || 0,
-                change: payload.change,
-                cache: payload.cache,
-                source: 'onInput',
-            };
+                const id = eventTypes.VALUE + ':' + this.config.id + '_' + childNodeID;
 
-            const id = eventTypes.VALUE + ':' + this.config.id + '_' + childNodeID;
-
-            if (this.consumers[childNodeID].subscriptions.has(id)) {
-                // Reply
-                this.events.emit(id, replyMessage);
+                if (this.consumers[childNodeID].subscriptions.has(id)) {
+                    // Reply
+                    this.events.emit(id, replyMessage);
+                }
+            } else {
+                throw `No values found for "${statusItem}" in context store`;
             }
         } catch (error) {
             this.debug(`onInput:  ${error}`);
