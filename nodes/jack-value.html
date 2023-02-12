@@ -171,6 +171,72 @@
                 $nodeInputTopic.trigger('focus');
             });
 
+            // eslint-disable-next-line unicorn/consistent-function-scoping
+            const getMatch = (value, searchValue) => {
+                const index = value.toLowerCase().indexOf(searchValue.toLowerCase());
+                const length = index > -1 ? searchValue.length : 0;
+                return {
+                    index: index,
+                    found: index > -1,
+                    pre: value.slice(0, Math.max(0, index)),
+                    match: value.slice(index, index + length),
+                    post: value.slice(Math.max(0, index + length)),
+                };
+            };
+
+            const generateSpans = (match) => {
+                const elements = [];
+                if (match.pre) {
+                    elements.push($('<span/>').text(match.pre));
+                }
+                if (match.match) {
+                    elements.push(
+                        $('<span/>', {
+                            style: 'font-weight: bold; color: var(--red-ui-text-color-link);',
+                        }).text(match.match)
+                    );
+                }
+                if (match.post) {
+                    elements.push($('<span/>').text(match.post));
+                }
+                return elements;
+            };
+
+            const autoCompleteSearch = (options, value) => {
+                let matches = [];
+                for (const opt of options) {
+                    const optValue = opt.value;
+                    const optSource = (opt.source || []).join(',');
+                    const valueMatch = getMatch(optValue, value);
+                    const sourceMatch = getMatch(optSource, value);
+                    if (valueMatch.found || sourceMatch.found) {
+                        const element = $('<div>', { style: 'display: flex' });
+                        const valueElement = $('<div/>', {
+                            style: 'font-family: var(--red-ui-monospace-font); white-space:nowrap; overflow: hidden; flex-grow:1',
+                        });
+                        valueElement.append(generateSpans(valueMatch));
+                        valueElement.appendTo(element);
+                        if (optSource) {
+                            const optElement = $('<div>').css({ 'font-size': '0.8em' });
+                            optElement.append(generateSpans(sourceMatch));
+                            optElement.appendTo(element);
+                        }
+                        matches.push({
+                            value: optValue,
+                            label: element,
+                            i: valueMatch.found ? valueMatch.index : sourceMatch.index,
+                        });
+                    }
+                }
+
+                matches.sort(function (A, B) {
+                    return A.i - B.i;
+                });
+                matches.unshift({ value: '', label: '*' });
+
+                return matches;
+            };
+
             $('.node-typed-input-property-value').each(function () {
                 // const nodeId = $nodeInputJack.val();
                 const id = $(this).attr('id');
@@ -184,11 +250,7 @@
                                     value: 'str',
                                     label: 'string',
                                     icon: 'red/images/typedInput/az.svg',
-                                    autoComplete: function () {
-                                        return deviceTree[type]
-                                            ? [{ value: '', label: '*' }, ...deviceTree[type]]
-                                            : [{ value: '', label: '*' }];
-                                    },
+                                    autoComplete: (value) => autoCompleteSearch(deviceTree[type], value),
                                 },
                                 // { value: 're', label: 'regular expression', icon: 'red/images/typedInput/re.svg' },
                             ],

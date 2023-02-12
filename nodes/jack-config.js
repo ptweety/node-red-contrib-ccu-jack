@@ -1176,7 +1176,7 @@ function nodeInstance(config) {
 
                                                 result.datapoint.set(datapointItem.identifier, {
                                                     value: datapointItem.identifier,
-                                                    label: datapointItem.identifier,
+                                                    source: [],
                                                 });
                                             }
                                         }
@@ -1189,7 +1189,7 @@ function nodeInstance(config) {
 
                                                 result.room.set(roomItem.identifier, {
                                                     value: roomItem.identifier,
-                                                    label: roomItem.identifier + ' - ' + roomItem.title,
+                                                    source: [roomItem.title],
                                                 });
                                             }
 
@@ -1199,18 +1199,18 @@ function nodeInstance(config) {
 
                                                 result.function.set(functionItem.identifier, {
                                                     value: functionItem.identifier,
-                                                    label: functionItem.identifier + ' - ' + functionItem.title,
+                                                    source: [functionItem.title],
                                                 });
                                             }
 
                                             result.channel.set(channelItem.address, {
                                                 value: channelItem.address,
-                                                label: channelItem.address + ' - ' + channelItem.title,
+                                                source: [channelItem.title],
                                             });
 
                                             result.channelType.set(channelItem.type, {
                                                 value: channelItem.type,
-                                                label: channelItem.type,
+                                                source: [],
                                             });
 
                                             if (
@@ -1219,7 +1219,7 @@ function nodeInstance(config) {
                                             )
                                                 result.channelIndex.set(channelItem.identifier, {
                                                     value: channelItem.identifier,
-                                                    label: channelItem.identifier,
+                                                    source: [],
                                                 });
                                         }
                                     }
@@ -1228,18 +1228,18 @@ function nodeInstance(config) {
                                 if (matchChannel) {
                                     result.interfaceType.set(deviceItem.interfaceType, {
                                         value: deviceItem.interfaceType,
-                                        label: deviceItem.interfaceType,
+                                        source: [],
                                     });
 
                                     result.deviceType.set(deviceItem.type, {
                                         value: deviceItem.type,
-                                        label: deviceItem.type,
+                                        source: [],
                                     });
 
                                     if (rqDevice.length === 0 || rqDevice.includes(device))
                                         result.device.set(deviceItem.identifier, {
                                             value: deviceItem.identifier,
-                                            label: deviceItem.identifier + ' - ' + deviceItem.title,
+                                            source: [deviceItem.title],
                                         });
                                 }
                             }
@@ -1270,7 +1270,7 @@ function nodeInstance(config) {
                             if (item !== '.')
                                 result.push({
                                     value: items[item]['.'].identifier,
-                                    label: items[item]['.'].identifier + ' - ' + items[item]['.'].title,
+                                    source: [items[item]['.'].title],
                                 });
                         }
                         response.status(200).send(JSON.stringify(result));
