@@ -79,6 +79,7 @@ function nodeInstance(config) {
         username: this.username,
         password: this.password,
         log: RED.log,
+        shouldLog: ['debug', 'trace'].includes(RED.settings.logging.console.level),
         // logLevel: RED.settings.logging.console.level,
     };
 

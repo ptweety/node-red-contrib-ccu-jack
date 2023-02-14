@@ -38,6 +38,7 @@ class JACK {
             useauth: options.useauth || false,
             username: options.username || '',
             password: options.password || '',
+            log: options.log || console,
             shouldLog: options.shouldLog || false,
         };
 
