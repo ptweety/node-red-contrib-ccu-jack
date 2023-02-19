@@ -100,7 +100,7 @@
             user: { type: 'text' },
             password: { type: 'password' },
         },
-        icon: 'cog.png',
+        icon: 'cog.svg',
         label: function () {
             return this.name || this.host;
         },
@@ -117,9 +117,10 @@
 
             $.getJSON('jack', (data) => {
                 const discovered = [];
-                for (const ccu of data.discover) {
-                    discovered.push({ label: ccu.address + ' ' + ccu.serial, value: ccu.address });
-                }
+                if (data.discover)
+                    for (const ccu of data.discover) {
+                        discovered.push({ label: ccu.address + ' ' + ccu.serial, value: ccu.address });
+                    }
 
                 $nodeConfigInputHost.autocomplete({
                     source: discovered,
