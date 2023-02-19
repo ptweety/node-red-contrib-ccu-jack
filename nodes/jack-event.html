@@ -186,7 +186,7 @@
             cache: { value: false },
         },
         align: 'left',
-        icon: 'bridge.png',
+        icon: 'bridge.svg',
         inputs: 0,
         outputs: 1,
         label: function () {
@@ -223,22 +223,29 @@
                 if (timerSetDomainOptions !== null) clearTimeout(timerSetDomainOptions);
 
                 timerSetDomainOptions = setTimeout(() => {
+                    console.debug('getDomainOptions()');
                     const nodeId = $nodeInputJack.val();
 
                     if (nodeId === '_ADD_') return;
 
                     $nodeInputDomain.empty().append('<option value="">*</option>');
-                    $.getJSON(`jack?config=${nodeId}&type=domain`, (data) => {
-                        for (const index of Object.keys(data)) {
-                            $nodeInputDomain.append(
-                                '<option value="' +
-                                    index +
-                                    (index === this.domain ? '" selected>' : '">') +
-                                    data[index].title +
-                                    '</option>'
-                            );
-                        }
-                    });
+                    $.getJSON(`jack?config=${nodeId}&type=domain`)
+                        .done((data) => {
+                            console.debug('domain data', data);
+                            for (const index of Object.keys(data)) {
+                                $nodeInputDomain.append(
+                                    '<option value="' +
+                                        index +
+                                        (index === this.domain ? '" selected>' : '">') +
+                                        data[index].title +
+                                        '</option>'
+                                );
+                            }
+                            console.debug(`selected domain: ${$nodeInputDomain.val()}`);
+                        })
+                        .fail((_, textStatus, error) => {
+                            console.error(`Request Failed: ${textStatus}, ${error}`);
+                        });
                 }, 100);
             };
 
@@ -261,6 +268,7 @@
             let deviceTree = { room: [], function: [], device: [] };
             let timerRefreshDeviceTree;
             const getDeviceTree = () => {
+                console.debug('getDeviceTree()');
                 const nodeId = $nodeInputJack.val();
 
                 if (nodeId === '_ADD_') return;
@@ -281,11 +289,14 @@
                     queryItems[item + 'T'] = $(`#node-input-${item}T`).val();
                 }
 
-                $.getJSON(`jack?config=${nodeId}&type=tree&domain=${$('#node-input-domain').val()}`, queryItems).done(
-                    (data) => {
+                $.getJSON(`jack?config=${nodeId}&type=tree&domain=${$('#node-input-domain').val()}`, queryItems)
+                    .done((data) => {
+                        console.debug('device tree data', data);
                         deviceTree = data;
-                    }
-                );
+                    })
+                    .fail((_, textStatus, error) => {
+                        console.log(`Request Failed: ${textStatus}, ${error}`);
+                    });
             };
 
             const refreshDeviceTree = () => {
@@ -296,12 +307,14 @@
                 }, 100);
             };
 
-            $nodeInputJack.on('change', (/* event, type, value */) => {
+            $nodeInputJack.on('change', (event, type, value) => {
+                console.debug(`${$(this).attr('id')}.on('change', ${event.target.id}, ${type}, ${value})`);
                 setDomainOptions();
                 refreshFormRows();
             });
 
-            $nodeInputDomain.on('change', (/* event, type, value */) => {
+            $nodeInputDomain.on('change', (event, type, value) => {
+                console.debug(`${$(this).attr('id')}.on('change', ${event.target.id}, ${type}, ${value})`);
                 refreshDeviceTree();
                 refreshFormRows();
                 $nodeInputTopic.trigger('focus');
@@ -339,6 +352,7 @@
             };
 
             const autoCompleteSearch = (options, value) => {
+                console.debug('autoCompleteSearch()');
                 let matches = [];
                 for (const opt of options) {
                     const optValue = opt.value;
@@ -370,6 +384,7 @@
                 });
                 matches.unshift({ value: '', label: '*' });
 
+                console.debug('matches', matches);
                 return matches;
             };
 
@@ -416,10 +431,13 @@
                             ],
                             typeField: '#' + $(this).attr('id') + 'T',
                         });
+
+                        $(this).on('change', (event, type, value) => {
+                            console.debug(`${$(this).attr('id')}.on('change', ${event.target.id}, ${type}, ${value})`);
+                            refreshDeviceTree();
+                        });
                     }
                 }
-
-                $(this).on('change', (/* event, type, value */) => refreshDeviceTree());
             });
         },
         oneditsave: function () {

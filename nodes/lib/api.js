@@ -67,7 +67,7 @@ class API {
 
         this.request = async ({ method = 'GET', url = '/', data }) => {
             const request = { method, url, ...this.axiosConfig };
-            if (this.shouldLog) console.debug(request);
+            // if (this.shouldLog) console.debug(request);
 
             if (method !== 'GET' && data !== null) request['data'] = data;
 

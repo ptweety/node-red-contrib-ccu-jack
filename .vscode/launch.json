@@ -20,6 +20,11 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
+            // "env": {
+            //     "DEBUG": "mqttjs,mqttjs:client"
+            // },
+            // "outputCapture": "std",
+            // "console": "integratedTerminal",
             "program": "${workspaceFolder}/node_modules/node-red/red.js",
             "args": [
                 "-s",
