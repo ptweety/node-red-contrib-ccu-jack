@@ -1068,7 +1068,7 @@ function nodeInstance(config) {
 
     //#region ---- Communication with editor ----
 
-    RED.httpAdmin.get('/jack', RED.auth.needsPermission('jack.read'), (request, response) => {
+    RED.httpAdmin.get('/jack', (request, response) => {
         if (request.query.config && request.query.config !== '_ADD_') {
             const config = RED.nodes.getNode(request.query.config);
             if (!config) {
