@@ -2,8 +2,23 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v0.0.11](https://github.com/ptweety/node-red-contrib-ccu-jack/compare/v0.0.10...v0.0.11)
+
+- fix: more debug messages [`4cd71fb`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/4cd71fb8849b959db6d5058b79fe23cb95b5c9d2)
+- chore: update dependencies [`d143445`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/d143445f88fb57eb4d93f2f3f72cdb0fc9ed90a4)
+- fix: improve some debug logs [`e875146`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/e875146d546700d90b56aee32704421de6784a18)
+- fix: handle empty discover result [`124a94f`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/124a94fa9d48dd7d40bee6d6975872fe62a16e84)
+- fix: remove needless auth check [`ee37dc3`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/ee37dc349ded21c8a9adadb30e30cb0121cb6fb2)
+- fix: improve debug logs [`123d2d3`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/123d2d3d494fb6a1cadd042237bee959dd79f9c5)
+- feat: improve search in jack-value and jack-event [`2f8a520`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/2f8a52065bde86517f1b87ff5f39b710e1a8d421)
+- fix: error handling for invalid topic on input message [`9468ee2`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/9468ee2c77ab12c33ee4103fccf7e5a0197dceb0)
+- chore: update dependencies [`7338a85`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/7338a85f24ddb4f8bb400e2a073d186c2407cedb)
+
 #### [v0.0.10](https://github.com/ptweety/node-red-contrib-ccu-jack/compare/v0.0.9...v0.0.10)
 
+> 5 February 2023
+
+- chore: bump version to 0.0.10 [`8220831`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/822083195929f6ab10281d4e4d9c14fcd2ae8cf4)
 - chore: update dependencies [`6da87b8`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/6da87b8013ad82afdc76ba93b391dbdc0daa7e45)
 - refactor: move on change handler [`0e904fd`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/0e904fd97f057b4ce0808dd2dd139b3787029404)
 - fix: internal event handling on re-deploy [`b1763e7`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/b1763e70b7d2e998229c7500b4c000e0258b68fe)

@@ -1,6 +1,6 @@
 {
   "name": "@ptweety/node-red-contrib-ccu-jack",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "deprecated": false,
   "description": "Node-RED Nodes for the Homematic integration via CCU-Jack",
   "main": "none",
