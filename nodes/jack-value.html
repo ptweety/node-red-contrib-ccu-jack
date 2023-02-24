@@ -94,56 +94,52 @@
         outputLabels: function (_) {
             return this._('@ptweety/node-red-contrib-ccu-jack/messages:value.node.output');
         },
-        oneditprepare: function () {
+        oneditprepare: async function () {
             const $nodeInputJack = $('#node-input-jack');
             const $nodeInputDomain = $('#node-input-domain');
             const $nodeInputTopic = $('#node-input-topic');
 
-            $nodeInputTopic.autoComplete({
-                delay: 0,
-                minLength: 0,
-                search: function () {
-                    return ['*', '${domain}/status/${device}/${channelIndex}/${datapoint}'].map((value) => {
-                        return { value, label: value };
+            let debug;
+            await $.getJSON(`jack?config=${$nodeInputJack.val()}`)
+                .done((responseJSON) => {
+                    debug = responseJSON?.debug || false;
+                    // console.debug('debug', responseJSON);
+                })
+                .fail((jqXHR, textStatus, error) => {
+                    console.debug({ jqXHR, textStatus, error });
+                });
+            console.debug = debug ? console.debug : function () {};
+
+            const getDomainOptions = async () => {
+                console.debug('getDomainOptions()');
+                const nodeId = $nodeInputJack.val();
+
+                if (nodeId === '_ADD_') return;
+
+                $nodeInputDomain.empty().append('<option value="">*</option>');
+                await $.getJSON(`jack?config=${nodeId}&type=domain`)
+                    .done((responseJSON) => {
+                        console.debug('domain data', responseJSON);
+                        for (const index of Object.keys(responseJSON)) {
+                            if (['device', 'virtdev'].includes(index))
+                                $nodeInputDomain.append(
+                                    '<option value="' +
+                                        index +
+                                        (index === this.domain ? '" selected>' : '">') +
+                                        responseJSON[index].title +
+                                        '</option>'
+                                );
+                        }
+                        console.debug(`selected domain: ${$nodeInputDomain.val()}`);
+                    })
+                    .fail((jqXHR, textStatus, error) => {
+                        console.dir({ jqXHR, textStatus, error });
+                        RED.notify(`Request failed with: ${jqXHR.status} (${error})`, 'error');
                     });
-                },
-            });
-
-            let timerSetDomainOptions;
-            const setDomainOptions = () => {
-                if (timerSetDomainOptions !== null) clearTimeout(timerSetDomainOptions);
-
-                timerSetDomainOptions = setTimeout(() => {
-                    console.debug('getDomainOptions()');
-                    const nodeId = $nodeInputJack.val();
-
-                    if (nodeId === '_ADD_') return;
-
-                    $nodeInputDomain.empty().append('<option value="">*</option>');
-                    $.getJSON(`jack?config=${nodeId}&type=domain`)
-                        .done((data) => {
-                            console.debug('domain data', data);
-                            for (const index of Object.keys(data)) {
-                                if (['device', 'virtdev'].includes(index))
-                                    $nodeInputDomain.append(
-                                        '<option value="' +
-                                            index +
-                                            (index === this.domain ? '" selected>' : '">') +
-                                            data[index].title +
-                                            '</option>'
-                                    );
-                            }
-                            console.debug(`selected domain: ${$nodeInputDomain.val()}`);
-                        })
-                        .fail((_, textStatus, error) => {
-                            console.error(`Request Failed: ${textStatus}, ${error}`);
-                        });
-                }, 100);
             };
 
             let deviceTree = { room: [], function: [], device: [] };
-            let timerRefreshDeviceTree;
-            const getDeviceTree = () => {
+            const getDeviceTree = async () => {
                 console.debug('getDeviceTree()');
                 const nodeId = $nodeInputJack.val();
 
@@ -155,33 +151,36 @@
                     queryItems[item + 'T'] = $(`#node-input-${item}T`).val();
                 }
 
-                $.getJSON(`jack?config=${nodeId}&type=tree&domain=${$('#node-input-domain').val()}`, queryItems)
-                    .done((data) => {
-                        console.debug('device tree data', data);
-                        deviceTree = data;
+                await $.getJSON(`jack?config=${nodeId}&type=tree&domain=${$('#node-input-domain').val()}`, queryItems)
+                    .done((responseJSON) => {
+                        console.debug('device tree data', responseJSON);
+                        deviceTree = responseJSON;
                     })
-                    .fail((_, textStatus, error) => {
-                        console.log(`Request Failed: ${textStatus}, ${error}`);
+                    .fail((jqXHR, textStatus, error) => {
+                        console.dir({ jqXHR, textStatus, error });
+                        RED.notify(`Request failed with: ${jqXHR.status} (${error})`, 'error');
                     });
             };
 
-            const refreshDeviceTree = () => {
-                if (timerRefreshDeviceTree !== null) clearTimeout(timerRefreshDeviceTree);
-
-                timerRefreshDeviceTree = setTimeout(() => {
-                    getDeviceTree();
-                }, 100);
-            };
-
-            $nodeInputJack.on('change', (event, type, value) => {
+            $nodeInputJack.on('change', async (event, type, value) => {
                 console.debug(`${$(this).attr('id')}.on('change', ${event.target.id}, ${type}, ${value})`);
-                setDomainOptions();
+                await getDomainOptions();
             });
 
-            $nodeInputDomain.on('change', (event, type, value) => {
+            $nodeInputDomain.on('change', async (event, type, value) => {
                 console.debug(`${$(this).attr('id')}.on('change', ${event.target.id}, ${type}, ${value})`);
-                refreshDeviceTree();
+                await getDeviceTree();
                 $nodeInputTopic.trigger('focus');
+            });
+
+            $nodeInputTopic.autoComplete({
+                delay: 0,
+                minLength: 0,
+                search: function () {
+                    return ['*', '${domain}/status/${device}/${channelIndex}/${datapoint}'].map((value) => {
+                        return { value, label: value };
+                    });
+                },
             });
 
             // eslint-disable-next-line unicorn/consistent-function-scoping
@@ -272,9 +271,9 @@
                             typeField: '#' + $(this).attr('id') + 'T',
                         });
 
-                        $(this).on('change', (event, type, value) => {
+                        $(this).on('change', async (event, type, value) => {
                             console.debug(`${$(this).attr('id')}.on('change', ${event.target.id}, ${type}, ${value})`);
-                            refreshDeviceTree();
+                            await getDeviceTree();
                         });
                     }
                 }

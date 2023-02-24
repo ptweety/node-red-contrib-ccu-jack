@@ -16,8 +16,8 @@ const nodeConfig = {
     RED: undefined,
     /** @type {string} Node Name - has to match with html file and package.json `red` section */
     nodeName: 'jack-config',
-    /** @type {boolean} enable development features */
-    development: false,
+    /** @type {boolean} enable debug messages */
+    debug: false,
 };
 
 const i18nCatalog = '@ptweety/node-red-contrib-ccu-jack/messages:';
@@ -79,8 +79,7 @@ function nodeInstance(config) {
         username: this.username,
         password: this.password,
         log: RED.log,
-        shouldLog: ['debug', 'trace'].includes(RED.settings.logging.console.level),
-        // logLevel: RED.settings.logging.console.level,
+        shouldLog: nodeConfig.debug,
     };
 
     if (this.usetls && config.tls) {
@@ -319,7 +318,7 @@ function nodeInstance(config) {
                 });
             }
 
-            if (nodeConfig.development) {
+            if (nodeConfig.debug) {
                 console.dir(this.contextStore);
             }
         }
@@ -1068,11 +1067,35 @@ function nodeInstance(config) {
 
     //#region ---- Communication with editor ----
 
+    if (nodeConfig.debug)
+        RED.httpAdmin.use('/jack', (request, response, next) => {
+            let send = response.send;
+            response.send = function (content) {
+                response.contentBody = content;
+                send.call(this, content);
+            };
+
+            response.once('finish', () => {
+                RED.log.debug(`${request.method} request: ${request.url} ${request.hostname}`);
+                try {
+                    console.dir({
+                        status: response.statusCode,
+                        statusText: response.statusMessage,
+                        data: JSON.parse(response.contentBody) || {},
+                    });
+                } catch {
+                    //
+                }
+            });
+
+            next();
+        });
+
     RED.httpAdmin.get('/jack', (request, response) => {
         if (request.query.config && request.query.config !== '_ADD_') {
             const config = RED.nodes.getNode(request.query.config);
             if (!config) {
-                response.status(500).send(JSON.stringify({}));
+                response.status(500).json({});
                 return;
             }
 
@@ -1096,9 +1119,9 @@ function nodeInstance(config) {
                                 title: item.title,
                             };
                         }
-                        response.status(200).send(JSON.stringify(result));
+                        response.status(200).json(result);
                     } catch {
-                        response.status(500).send(JSON.stringify({}));
+                        response.status(500).json({});
                     }
                     break;
                 }
@@ -1256,7 +1279,7 @@ function nodeInstance(config) {
                                 )
                             );
                     } catch {
-                        response.status(500).send(JSON.stringify({}));
+                        response.status(500).json({});
                     }
                     break;
                 }
@@ -1274,19 +1297,19 @@ function nodeInstance(config) {
                                     source: [items[item]['.'].title],
                                 });
                         }
-                        response.status(200).send(JSON.stringify(result));
+                        response.status(200).json(result);
                     } catch {
-                        response.status(500).send(JSON.stringify({}));
+                        response.status(500).json({});
                     }
                     break;
                 }
 
                 default: {
-                    response.status(200).send(JSON.stringify({}));
+                    response.status(200).json({ debug: nodeConfig.debug });
                 }
             }
         } else {
-            response.status(200).send(JSON.stringify(this.network));
+            response.status(200).json(this.network);
         }
     });
 
@@ -1300,9 +1323,9 @@ module.exports = (RED) => {
 
     RED.log.debug('node-red-contrib-ccu-jack version: ' + package_.version);
 
-    if (process.env.NRCCJ_DEV === 'true') {
-        RED.log.warn('Development features enabled');
-        nodeConfig.development = true;
+    if (process.env.NRCCJ_DEV === 'true' || ['debug', 'trace'].includes(RED.settings.logging.console.level)) {
+        RED.log.warn(`[${nodeConfig.nodeName}] Development features enabled`);
+        nodeConfig.debug = true;
     }
 
     RED.nodes.registerType(nodeConfig.nodeName, nodeInstance, {

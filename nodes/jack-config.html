@@ -115,28 +115,32 @@
             const $nodeConfigInputHost = $('#node-config-input-host');
             // const $nodeConfigInputPort = $('#node-config-input-port');
 
-            $.getJSON('jack', (data) => {
-                const discovered = [];
-                if (data.discover)
-                    for (const ccu of data.discover) {
-                        discovered.push({ label: ccu.address + ' ' + ccu.serial, value: ccu.address });
+            $.getJSON('jack')
+                .done((responseJSON) => {
+                    const discovered = [];
+                    if (responseJSON.discover) {
+                        console.debug('discover data', responseJSON);
+                        for (const ccu of responseJSON.discover) {
+                            discovered.push({ label: ccu.address + ' ' + ccu.serial, value: ccu.address });
+                        }
                     }
 
-                $nodeConfigInputHost.autocomplete({
-                    source: discovered,
-                    delay: 0,
-                    minLength: 0,
-                    select: function (_, ui) {
-                        const label = ui.item.label.split(' ').pop();
-                        $nodeConfigInputName.val(label);
-                    },
+                    $nodeConfigInputHost.autocomplete({
+                        source: discovered,
+                        delay: 0,
+                        minLength: 0,
+                        select: function (_, ui) {
+                            const label = ui.item.label.split(' ').pop();
+                            $nodeConfigInputName.val(label);
+                        },
+                    });
+
+                    if (!this.host) $nodeConfigInputHost.trigger('focus');
+                })
+                .fail((jqXHR, textStatus, error) => {
+                    console.dir({ jqXHR, textStatus, error });
+                    RED.notify(`Request failed with: ${jqXHR.status} (${error})`, 'error');
                 });
-            });
-            setTimeout(() => {
-                if (!this.host) {
-                    $nodeConfigInputHost.trigger('focus');
-                }
-            }, 250);
 
             const $nodeConfigInputUseauth = $('#node-config-input-useauth');
             if (this.useauth === undefined) {
