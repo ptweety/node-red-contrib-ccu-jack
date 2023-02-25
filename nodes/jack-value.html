@@ -140,11 +140,13 @@
 
             let deviceTree = { room: [], function: [], device: [] };
             const getDeviceTree = async () => {
-                console.debug('getDeviceTree()');
                 const nodeId = $nodeInputJack.val();
+                const domain = $nodeInputDomain.val() === null ? this.domain : $nodeInputDomain.val();
 
                 if (nodeId === '_ADD_') return;
+                if (!['device', 'virtdev'].includes(domain)) return;
 
+                console.debug('getDeviceTree()');
                 const queryItems = {};
                 for (const item of ['device', 'channelIndex', 'datapoint']) {
                     queryItems[item] = $(`#node-input-${item}`).val();
@@ -161,6 +163,9 @@
                         RED.notify(`Request failed with: ${jqXHR.status} (${error})`, 'error');
                     });
             };
+
+            await getDomainOptions();
+            await getDeviceTree();
 
             $nodeInputJack.on('change', async (event, type, value) => {
                 console.debug(`${$(this).attr('id')}.on('change', ${event.target.id}, ${type}, ${value})`);
