@@ -198,13 +198,13 @@
         outputLabels: function (_) {
             return this._('@ptweety/node-red-contrib-ccu-jack/messages:event.node.output');
         },
-        oneditprepare: async function () {
+        oneditprepare: function () {
             const $nodeInputJack = $('#node-input-jack');
             const $nodeInputDomain = $('#node-input-domain');
             const $nodeInputTopic = $('#node-input-topic');
 
             let debug;
-            await $.getJSON(`jack?config=${$nodeInputJack.val()}`)
+            $.ajax({ url: `jack?config=${$nodeInputJack.val()}`, dataType: 'json', async: false, cache: false })
                 .done((responseJSON) => {
                     debug = responseJSON?.debug || false;
                     // console.debug('debug', responseJSON);
@@ -214,14 +214,14 @@
                 });
             console.debug = debug ? console.debug : function () {};
 
-            const getDomainOptions = async () => {
+            const getDomainOptions = () => {
                 console.debug('getDomainOptions()');
                 const nodeId = $nodeInputJack.val();
 
                 if (nodeId === '_ADD_') return;
 
                 $nodeInputDomain.empty().append('<option value="">*</option>');
-                await $.getJSON(`jack?config=${nodeId}&type=domain`)
+                $.ajax({ url: `jack?config=${nodeId}&type=domain`, dataType: 'json', async: false, cache: false })
                     .done((responseJSON) => {
                         console.debug('domain data', responseJSON);
                         for (const index of Object.keys(responseJSON)) {
@@ -253,7 +253,7 @@
             };
 
             let deviceTree = { room: [], function: [], device: [] };
-            const getDeviceTree = async () => {
+            const getDeviceTree = () => {
                 const nodeId = $nodeInputJack.val();
                 const domain = $nodeInputDomain.val() === null ? this.domain : $nodeInputDomain.val();
 
@@ -277,7 +277,13 @@
                     queryItems[item + 'T'] = $(`#node-input-${item}T`).val();
                 }
 
-                await $.getJSON(`jack?config=${nodeId}&type=tree&domain=${$('#node-input-domain').val()}`, queryItems)
+                $.ajax({
+                    url: `jack?config=${nodeId}&type=tree&domain=${domain}`,
+                    data: queryItems,
+                    dataType: 'json',
+                    async: false,
+                    cache: false,
+                })
                     .done((responseJSON) => {
                         console.debug('device tree data', responseJSON);
                         deviceTree = responseJSON;
@@ -288,19 +294,19 @@
                     });
             };
 
-            await getDomainOptions();
+            getDomainOptions();
             refreshFormRows();
-            await getDeviceTree();
+            getDeviceTree();
 
-            $nodeInputJack.on('change', async (event, type, value) => {
+            $nodeInputJack.on('change', (event, type, value) => {
                 console.debug(`${$(this).attr('id')}.on('change', ${event.target.id}, ${type}, ${value})`);
-                await getDomainOptions();
+                getDomainOptions();
                 refreshFormRows();
             });
 
-            $nodeInputDomain.on('change', async (event, type, value) => {
+            $nodeInputDomain.on('change', (event, type, value) => {
                 console.debug(`${$(this).attr('id')}.on('change', ${event.target.id}, ${type}, ${value})`);
-                await getDeviceTree();
+                getDeviceTree();
                 refreshFormRows();
                 $nodeInputTopic.trigger('focus');
             });
@@ -398,7 +404,7 @@
                         const type = id.slice(11);
                         const url = 'jack?config=' + nodeId + '&type=' + type;
 
-                        $.getJSON(url)
+                        $.ajax({ url, dataType: 'json', async: false, cache: false })
                             .done((responseJSON) => {
                                 $(this).typedInput({
                                     type: 'str',
@@ -441,9 +447,9 @@
                             typeField: '#' + $(this).attr('id') + 'T',
                         });
 
-                        $(this).on('change', async (event, type, value) => {
+                        $(this).on('change', (event, type, value) => {
                             console.debug(`${$(this).attr('id')}.on('change', ${event.target.id}, ${type}, ${value})`);
-                            await getDeviceTree();
+                            getDeviceTree();
                         });
                     }
                 }
