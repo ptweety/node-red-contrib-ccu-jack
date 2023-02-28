@@ -77,9 +77,102 @@
 (function () {
     'use strict';
 
-    RED.nodes.registerType('jack-config', {
-        category: 'config',
-        color: '#c7d8d8',
+    /** Module name must match this nodes html file @constant {string} moduleName */
+    const moduleName = 'jack-config';
+    /** Node's palette category @constant {string} paletteCategory */
+    const paletteCategory = 'config';
+    /** Node's background color @constant {string} paletteColor */
+    const paletteColor = '#c7d8d8';
+
+    function onEditPrepare(node) {
+        const $nodeConfigInputName = $('#node-config-input-name');
+        const $nodeConfigInputHost = $('#node-config-input-host');
+        // const $nodeConfigInputPort = $('#node-config-input-port');
+
+        $.getJSON('jack/discover/net')
+            .done((responseJSON) => {
+                const discovered = [];
+                if (responseJSON.discover) {
+                    console.debug('discover data', responseJSON);
+                    for (const ccu of responseJSON.discover) {
+                        discovered.push({ label: ccu.address + ' ' + ccu.serial, value: ccu.address });
+                    }
+                }
+
+                $nodeConfigInputHost.autocomplete({
+                    source: discovered,
+                    delay: 0,
+                    minLength: 0,
+                    select: function (_, ui) {
+                        const label = ui.item.label.split(' ').pop();
+                        $nodeConfigInputName.val(label);
+                    },
+                });
+
+                if (!node.host) $nodeConfigInputHost.trigger('focus');
+            })
+            .fail((jqXHR, textStatus, error) => {
+                console.debug({ jqXHR, textStatus, error });
+                RED.notify(`Request failed with: ${jqXHR.status} (${error})`, 'error');
+            });
+
+        // useauth
+        const updateAuthOptions = () => {
+            if ($nodeConfigInputUseauth.is(':checked')) {
+                $('#node-config-row-useauth').show();
+            } else {
+                $('#node-config-row-useauth').hide();
+            }
+        };
+
+        const $nodeConfigInputUseauth = $('#node-config-input-useauth');
+        if (node.useauth === undefined) {
+            node.useauth = false;
+            $nodeConfigInputUseauth.prop('checked', false);
+        }
+
+        if (node.credentials.user || node.credentials.password) {
+            $nodeConfigInputUseauth.prop('checked', true);
+        } else {
+            $nodeConfigInputUseauth.prop('checked', false);
+        }
+
+        updateAuthOptions();
+        $nodeConfigInputUseauth.on('click', updateAuthOptions);
+
+        // usetls
+        const updateTLSOptions = () => {
+            if ($nodeConfigInputUsetls.is(':checked')) {
+                $('#node-config-row-usetls').show();
+            } else {
+                $('#node-config-row-usetls').hide();
+            }
+        };
+
+        const $nodeConfigInputUsetls = $('#node-config-input-usetls');
+
+        if (node.usetls === undefined) {
+            node.usetls = false;
+            $nodeConfigInputUsetls.prop('checked', false);
+        }
+
+        if (node.tls) {
+            $nodeConfigInputUsetls.prop('checked', true);
+        } else {
+            $nodeConfigInputUsetls.prop('checked', false);
+        }
+
+        updateTLSOptions();
+        $nodeConfigInputUsetls.on('click', updateTLSOptions);
+
+        // if (node.qos === undefined) {
+        // 	$('#node-input-qos').val('2');
+        // }
+    }
+
+    RED.nodes.registerType(moduleName, {
+        category: paletteCategory,
+        color: paletteColor,
         defaults: {
             name: { value: '', required: false },
             host: { value: '', required: true },
@@ -111,82 +204,7 @@
             return this.name ? 'node_label_italic' : '';
         },
         oneditprepare: function () {
-            const $nodeConfigInputName = $('#node-config-input-name');
-            const $nodeConfigInputHost = $('#node-config-input-host');
-            // const $nodeConfigInputPort = $('#node-config-input-port');
-
-            $.getJSON('jack')
-                .done((responseJSON) => {
-                    const discovered = [];
-                    if (responseJSON.discover) {
-                        console.debug('discover data', responseJSON);
-                        for (const ccu of responseJSON.discover) {
-                            discovered.push({ label: ccu.address + ' ' + ccu.serial, value: ccu.address });
-                        }
-                    }
-
-                    $nodeConfigInputHost.autocomplete({
-                        source: discovered,
-                        delay: 0,
-                        minLength: 0,
-                        select: function (_, ui) {
-                            const label = ui.item.label.split(' ').pop();
-                            $nodeConfigInputName.val(label);
-                        },
-                    });
-
-                    if (!this.host) $nodeConfigInputHost.trigger('focus');
-                })
-                .fail((jqXHR, textStatus, error) => {
-                    console.dir({ jqXHR, textStatus, error });
-                    RED.notify(`Request failed with: ${jqXHR.status} (${error})`, 'error');
-                });
-
-            const $nodeConfigInputUseauth = $('#node-config-input-useauth');
-            if (this.useauth === undefined) {
-                this.useauth = false;
-                $nodeConfigInputUseauth.prop('checked', false);
-            }
-
-            function updateAuthOptions() {
-                if ($nodeConfigInputUseauth.is(':checked')) {
-                    $('#node-config-row-useauth').show();
-                } else {
-                    $('#node-config-row-useauth').hide();
-                }
-            }
-            if (this.credentials.user || this.credentials.password) {
-                $nodeConfigInputUseauth.prop('checked', true);
-            } else {
-                $nodeConfigInputUseauth.prop('checked', false);
-            }
-            updateAuthOptions();
-            $nodeConfigInputUseauth.on('click', updateAuthOptions);
-
-            const $nodeConfigInputUsetls = $('#node-config-input-usetls');
-            if (this.usetls === undefined) {
-                this.usetls = false;
-                $nodeConfigInputUsetls.prop('checked', false);
-            }
-
-            function updateTLSOptions() {
-                if ($nodeConfigInputUsetls.is(':checked')) {
-                    $('#node-config-row-usetls').show();
-                } else {
-                    $('#node-config-row-usetls').hide();
-                }
-            }
-            if (this.tls) {
-                $nodeConfigInputUsetls.prop('checked', true);
-            } else {
-                $nodeConfigInputUsetls.prop('checked', false);
-            }
-            updateTLSOptions();
-            $nodeConfigInputUsetls.on('click', updateTLSOptions);
-
-            // if (this.qos === undefined) {
-            // 	$('#node-input-qos').val('2');
-            // }
+            onEditPrepare(this);
         },
         oneditsave: function () {
             if (!$('#node-config-input-useauth').is(':checked')) {

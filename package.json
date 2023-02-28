@@ -4,10 +4,6 @@
   "deprecated": false,
   "description": "Node-RED Nodes for the Homematic integration via CCU-Jack",
   "main": "none",
-  "directories": {
-    "ccu-jack": "ccu-jack",
-    "doc": "doc"
-  },
   "node-red": {
     "nodes": {
       "jack-config": "nodes/jack-config.js",
@@ -23,7 +19,7 @@
     "lint:dry": "npx eslint \"nodes/**/*.{js,html}\" --fix-dry-run; exit 0",
     "lint:fix": "npx eslint \"nodes/**/*.{js,html}\" --fix; exit 0",
     "prettify": "npx prettier --check \"packages/**/*.{js,html}\"; exit 0",
-    "start": "node ./node_modules/node-red/red.js -s ./.node-red/settings.js -u ./.node-red",
+    "start": "node ./node_modules/node-red/red.js -s ../.node-red/settings.js -u ../.node-red",
     "test": "jest",
     "watch:test": "jest --watchAll",
     "update": "npx npm-check-updates -u && npm install",

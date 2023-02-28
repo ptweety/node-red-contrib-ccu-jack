@@ -49,14 +49,6 @@
         <input type="hidden" id="node-input-deviceT" class="node-typed-input-property-type">
     </div>
 
-    <!--
-    <div class="form-row for-device for-virtdev">
-        <label for="node-input-deviceName">deviceName</label>
-        <input type="text" id="node-input-deviceName" class="node-typed-input-property-value" style="width: calc(100% - 105px)">
-        <input type="hidden" id="node-input-deviceNameT" class="node-typed-input-property-type">
-    </div>
-    -->
-
     <div class="form-row for-device for-virtdev">
         <label for="node-input-deviceType">deviceType</label>
         <input type="text" id="node-input-deviceType" class="node-typed-input-property-value" style="width: calc(100% - 105px)">
@@ -68,14 +60,6 @@
         <input type="text" id="node-input-channel" class="node-typed-input-property-value" style="width: calc(100% - 105px)">
         <input type="hidden" id="node-input-channelT" class="node-typed-input-property-type">
     </div>
-
-    <!--
-    <div class="form-row for-device for-virtdev">
-        <label for="node-input-channelName">channelName</label>
-        <input type="text" id="node-input-channelName" class="node-typed-input-property-value" style="width: calc(100% - 105px)">
-        <input type="hidden" id="node-input-channelNameT" class="node-typed-input-property-type">
-    </div>
-    -->
 
     <div class="form-row for-device for-virtdev">
         <label for="node-input-channelType">channelType</label>
@@ -101,27 +85,11 @@
         <input type="hidden" id="node-input-programT" class="node-typed-input-property-type">
     </div>
 
-    <!--
-    <div class="form-row for-program">
-        <label for="node-input-programName">programName</label>
-        <input type="text" id="node-input-programName" class="node-typed-input-property-value" style="width: calc(100% - 105px)">
-        <input type="hidden" id="node-input-programNameT" class="node-typed-input-property-type">
-    </div>
-    -->
-
     <div class="form-row for-sysvar">
         <label for="node-input-sysvar">sysvar</label>
         <input type="text" id="node-input-sysvar" class="node-typed-input-property-value" style="width: calc(100% - 105px)">
         <input type="hidden" id="node-input-sysvarT" class="node-typed-input-property-type">
     </div>
-
-    <!--
-    <div class="form-row for-sysvar">
-        <label for="node-input-sysvarName">sysvarName</label>
-        <input type="text" id="node-input-sysvarName" class="node-typed-input-property-value" style="width: calc(100% - 105px)">
-        <input type="hidden" id="node-input-sysvarNameT" class="node-typed-input-property-type">
-    </div>
-    -->
 
     <div class="form-row">
         <label for="node-input-change"> </label>
@@ -144,9 +112,260 @@
 (function () {
     'use strict';
 
-    RED.nodes.registerType('jack-event', {
-        category: 'Jack',
-        color: '#c2abc2',
+    /** Module name must match this nodes html file @constant {string} moduleName */
+    const moduleName = 'jack-event';
+    /** Node's palette category @constant {string} paletteCategory */
+    const paletteCategory = 'Jack';
+    /** Node's background color @constant {string} paletteColor */
+    const paletteColor = '#c2abc2';
+
+    /** Dummy logging
+     * @type {Object<string, Function>} */
+    const dummyLog = {
+        fatal: function () {}, // fatal - only those errors which make the application unusable should be recorded
+        error: function () {}, // error - record errors which are deemed fatal for a particular request + fatal errors
+        warn: function () {}, // warn - record problems which are non fatal + errors + fatal errors
+        info: function () {}, // info - record information about the general running of the application + warn + error + fatal errors
+        debug: function () {}, // debug - record information which is more verbose than info + info + warn + error + fatal errors
+        trace: function () {}, // trace - record very detailed logging + debug + info + warn + error + fatal errors
+    };
+    let log = dummyLog;
+
+    //#region ---- Communication with runtime ----
+
+    function getDataFromRuntime(domain) {
+        const $nodeInputDomain = $('#node-input-domain');
+        const nodeId = $('#node-input-jack').val();
+        const result = {};
+
+        log.debug(`getDataFromRuntime(${domain})`);
+
+        $.ajax({ url: `jack/${nodeId}/all`, dataType: 'json', async: false, cache: false })
+            .done((responseJSON) => {
+                const debug = responseJSON?.debug || false;
+                log.debug = debug ? console.debug : function () {};
+
+                result.domains = responseJSON?.domains || {};
+                result.program = responseJSON?.program || {};
+                result.sysvar = responseJSON?.sysvar || {};
+                result.device = responseJSON?.device || {};
+                result.virtdev = responseJSON?.virtdev || {};
+
+                log.debug('data', result);
+
+                $nodeInputDomain.empty().append('<option value="">*</option>');
+                for (const index of Object.keys(result.domains)) {
+                    $nodeInputDomain.append(
+                        '<option value="' +
+                            index +
+                            (index === domain ? '" selected>' : '">') +
+                            result.domains[index].title +
+                            '</option>'
+                    );
+                }
+                log.debug(`selected domain: ${$nodeInputDomain.val()}`);
+            })
+            .fail((jqXHR, textStatus, error) => {
+                log.debug({ jqXHR, textStatus, error });
+                RED.notify(`Request failed with: ${jqXHR.status} (${error})`, 'error');
+            });
+
+        return result;
+    }
+
+    function getDeviceTreeFromRuntime(domain) {
+        const nodeId = $('#node-input-jack').val();
+
+        let result = {};
+        if (nodeId === '_ADD_') return result;
+        if (!['device', 'virtdev'].includes(domain)) return result;
+
+        log.debug(`getDeviceTreeFromRuntime(${domain})`);
+        const queryItems = { domain };
+        for (const item of [
+            'interfaceType',
+            'room',
+            'function',
+            'device',
+            'deviceType',
+            'channel',
+            'channelType',
+            'channelIndex',
+            'datapoint',
+        ]) {
+            queryItems[item] = $(`#node-input-${item}`).val();
+            queryItems[item + 'T'] = $(`#node-input-${item}T`).val();
+        }
+
+        $.ajax({ url: `jack/${nodeId}/tree`, data: queryItems, dataType: 'json', async: false, cache: false })
+            .done((responseJSON) => {
+                log.debug(`${domain} data`, responseJSON);
+                result = responseJSON;
+            })
+            .fail((jqXHR, textStatus, error) => {
+                log.debug({ jqXHR, textStatus, error });
+                RED.notify(`Request failed with: ${jqXHR.status} (${error})`, 'error');
+            });
+
+        return result;
+    }
+
+    //#endregion ---- Communication with runtime ----
+
+    //#region ---- Search ----
+
+    function getMatch(value, searchValue) {
+        const index = value.toLowerCase().indexOf(searchValue.toLowerCase());
+        const length = index > -1 ? searchValue.length : 0;
+        return {
+            index: index,
+            found: index > -1,
+            pre: value.slice(0, Math.max(0, index)),
+            match: value.slice(index, index + length),
+            post: value.slice(Math.max(0, index + length)),
+        };
+    }
+
+    function generateSpans(match) {
+        const elements = [];
+        if (match.pre) {
+            elements.push($('<span/>').text(match.pre));
+        }
+        if (match.match) {
+            elements.push(
+                $('<span/>', {
+                    style: 'font-weight: bold; color: var(--red-ui-text-color-link);',
+                }).text(match.match)
+            );
+        }
+        if (match.post) {
+            elements.push($('<span/>').text(match.post));
+        }
+        return elements;
+    }
+
+    function autoCompleteSearch(node, data, input, value) {
+        log.debug(`autoCompleteSearch(${value})`);
+        try {
+            const $nodeInputDomain = $('#node-input-domain');
+            const domain = $nodeInputDomain.val() === null ? node.domain : $nodeInputDomain.val();
+            const options = ['program', 'sysvar'].includes(domain)
+                ? data[domain][input]
+                : getDeviceTreeFromRuntime(domain)[input];
+
+            let matches = [];
+            for (const opt of options) {
+                const optValue = opt.value;
+                const optSource = (opt.source || []).join(',');
+                const valueMatch = getMatch(optValue, value);
+                const sourceMatch = getMatch(optSource, value);
+                if (valueMatch.found || sourceMatch.found) {
+                    const element = $('<div>', { style: 'display: flex' });
+                    const valueElement = $('<div/>', {
+                        style: 'font-family: var(--red-ui-monospace-font); white-space:nowrap; overflow: hidden; flex-grow:1',
+                    });
+                    valueElement.append(generateSpans(valueMatch));
+                    valueElement.appendTo(element);
+                    if (optSource) {
+                        const optElement = $('<div>').css({ 'font-size': '0.8em' });
+                        optElement.append(generateSpans(sourceMatch));
+                        optElement.appendTo(element);
+                    }
+                    matches.push({
+                        value: optValue,
+                        label: element,
+                        i: valueMatch.found ? valueMatch.index : sourceMatch.index,
+                    });
+                }
+            }
+
+            matches.sort(function (A, B) {
+                return A.i - B.i;
+            });
+            matches.unshift({ value: '', label: '*' });
+
+            log.debug('matches', matches);
+            return matches;
+        } catch (error) {
+            log.debug(`autoCompleteSearch: ${error}`);
+        }
+    }
+
+    //#endregion ---- Search ----
+
+    function refreshFormRows(domain) {
+        $('.form-row').each(function () {
+            for (const item of ['device', 'program', 'sysvar', 'virtdev']) {
+                if ($(this).hasClass(`for-${item}`)) {
+                    $(this).hide();
+                }
+            }
+            if ($(this).hasClass(`for-${domain}`)) $(this).show();
+        });
+    }
+
+    function onEditPrepare(node) {
+        const $nodeInputJack = $('#node-input-jack');
+        const $nodeInputDomain = $('#node-input-domain');
+        const $nodeInputTopic = $('#node-input-topic');
+
+        let domain;
+        const refreshDomain = () => {
+            domain = $nodeInputDomain.val() === null ? node.domain : $nodeInputDomain.val();
+        };
+        refreshDomain();
+
+        let data = getDataFromRuntime(domain);
+        refreshFormRows(domain);
+
+        $nodeInputJack.on('change', (event, type, value) => {
+            log.debug(`${$(this).attr('id')}.on('change', ${event.target.id}, ${type}, ${value})`);
+            refreshDomain();
+            data = getDataFromRuntime(domain);
+            refreshFormRows(domain);
+        });
+
+        $nodeInputDomain.on('change', (event, type, value) => {
+            log.debug(`${$(this).attr('id')}.on('change', ${event.target.id}, ${type}, ${value})`);
+            refreshDomain();
+            refreshFormRows(domain);
+            $nodeInputTopic.trigger('focus');
+        });
+
+        $nodeInputTopic.autoComplete({
+            delay: 0,
+            minLength: 0,
+            search: function () {
+                return [
+                    '*',
+                    '${domain}/status/${device}/${channelIndex}/${datapoint}',
+                    '${domain}/status/${program}',
+                    '${domain}/status/${sysvar}',
+                ].map((value) => {
+                    return { value, label: value };
+                });
+            },
+        });
+
+        $('.node-typed-input-property-value').each(function () {
+            $(this).typedInput({
+                types: [
+                    {
+                        value: 'str',
+                        label: 'string',
+                        icon: 'red/images/typedInput/az.svg',
+                        autoComplete: (value) => autoCompleteSearch(node, data, $(this).attr('id').slice(11), value),
+                    },
+                    { value: 're', label: 'regular expression', icon: 'red/images/typedInput/re.svg' },
+                ],
+                typeField: '#' + $(this).attr('id') + 'T',
+            });
+        });
+    }
+
+    RED.nodes.registerType(moduleName, {
+        category: paletteCategory,
+        color: paletteColor,
         defaults: {
             name: { value: '' },
             jack: { value: 'localhost', type: 'jack-config', required: true },
@@ -160,14 +379,10 @@
             functionT: { value: 'str' },
             device: { value: '' },
             deviceT: { value: 'str' },
-            // deviceName: { value: '' },
-            // deviceNameT: { value: 'str' },
             deviceType: { value: '' },
             deviceTypeT: { value: 'str' },
             channel: { value: '' },
             channelT: { value: 'str' },
-            // channelName: { value: '' },
-            // channelNameT: { value: 'str' },
             channelType: { value: '' },
             channelTypeT: { value: 'str' },
             channelIndex: { value: '' },
@@ -176,12 +391,8 @@
             datapointT: { value: 'str' },
             program: { value: '' },
             programT: { value: 'str' },
-            // programName: { value: '' },
-            // programNameT: { value: 'str' },
             sysvar: { value: '' },
             sysvarT: { value: 'str' },
-            // sysvarName: { value: '' },
-            // sysvarNameT: { value: 'str' },
             change: { value: false },
             cache: { value: false },
         },
@@ -199,261 +410,7 @@
             return this._('@ptweety/node-red-contrib-ccu-jack/messages:event.node.output');
         },
         oneditprepare: function () {
-            const $nodeInputJack = $('#node-input-jack');
-            const $nodeInputDomain = $('#node-input-domain');
-            const $nodeInputTopic = $('#node-input-topic');
-
-            let debug;
-            $.ajax({ url: `jack?config=${$nodeInputJack.val()}`, dataType: 'json', async: false, cache: false })
-                .done((responseJSON) => {
-                    debug = responseJSON?.debug || false;
-                    // console.debug('debug', responseJSON);
-                })
-                .fail((jqXHR, textStatus, error) => {
-                    console.debug({ jqXHR, textStatus, error });
-                });
-            console.debug = debug ? console.debug : function () {};
-
-            const getDomainOptions = () => {
-                console.debug('getDomainOptions()');
-                const nodeId = $nodeInputJack.val();
-
-                if (nodeId === '_ADD_') return;
-
-                $nodeInputDomain.empty().append('<option value="">*</option>');
-                $.ajax({ url: `jack?config=${nodeId}&type=domain`, dataType: 'json', async: false, cache: false })
-                    .done((responseJSON) => {
-                        console.debug('domain data', responseJSON);
-                        for (const index of Object.keys(responseJSON)) {
-                            $nodeInputDomain.append(
-                                '<option value="' +
-                                    index +
-                                    (index === this.domain ? '" selected>' : '">') +
-                                    responseJSON[index].title +
-                                    '</option>'
-                            );
-                        }
-                        console.debug(`selected domain: ${$nodeInputDomain.val()}`);
-                    })
-                    .fail((jqXHR, textStatus, error) => {
-                        console.dir({ jqXHR, textStatus, error });
-                        RED.notify(`Request failed with: ${jqXHR.status} (${error})`, 'error');
-                    });
-            };
-
-            const refreshFormRows = () => {
-                const domain = $nodeInputDomain.val() === null ? this.domain : $nodeInputDomain.val();
-
-                $('.form-row').each(function () {
-                    for (const item of ['device', 'program', 'sysvar', 'virtdev']) {
-                        if ($(this).hasClass(`for-${item}`)) $(this).hide();
-                    }
-                    if ($(this).hasClass(`for-${domain}`)) $(this).show();
-                });
-            };
-
-            let deviceTree = { room: [], function: [], device: [] };
-            const getDeviceTree = () => {
-                const nodeId = $nodeInputJack.val();
-                const domain = $nodeInputDomain.val() === null ? this.domain : $nodeInputDomain.val();
-
-                if (nodeId === '_ADD_') return;
-                if (!['device', 'virtdev'].includes(domain)) return;
-
-                console.debug('getDeviceTree()');
-                const queryItems = {};
-                for (const item of [
-                    'interfaceType',
-                    'room',
-                    'function',
-                    'device',
-                    'deviceType',
-                    'channel',
-                    'channelType',
-                    'channelIndex',
-                    'datapoint',
-                ]) {
-                    queryItems[item] = $(`#node-input-${item}`).val();
-                    queryItems[item + 'T'] = $(`#node-input-${item}T`).val();
-                }
-
-                $.ajax({
-                    url: `jack?config=${nodeId}&type=tree&domain=${domain}`,
-                    data: queryItems,
-                    dataType: 'json',
-                    async: false,
-                    cache: false,
-                })
-                    .done((responseJSON) => {
-                        console.debug('device tree data', responseJSON);
-                        deviceTree = responseJSON;
-                    })
-                    .fail((jqXHR, textStatus, error) => {
-                        console.dir({ jqXHR, textStatus, error });
-                        RED.notify(`Request failed with: ${jqXHR.status} (${error})`, 'error');
-                    });
-            };
-
-            getDomainOptions();
-            refreshFormRows();
-            getDeviceTree();
-
-            $nodeInputJack.on('change', (event, type, value) => {
-                console.debug(`${$(this).attr('id')}.on('change', ${event.target.id}, ${type}, ${value})`);
-                getDomainOptions();
-                refreshFormRows();
-            });
-
-            $nodeInputDomain.on('change', (event, type, value) => {
-                console.debug(`${$(this).attr('id')}.on('change', ${event.target.id}, ${type}, ${value})`);
-                getDeviceTree();
-                refreshFormRows();
-                $nodeInputTopic.trigger('focus');
-            });
-
-            $nodeInputTopic.autoComplete({
-                delay: 0,
-                minLength: 0,
-                search: function () {
-                    return [
-                        '*',
-                        '${domain}/status/${device}/${channelIndex}/${datapoint}',
-                        '${domain}/status/${program}',
-                        '${domain}/status/${sysvar}',
-                    ].map((value) => {
-                        return { value, label: value };
-                    });
-                },
-            });
-
-            // eslint-disable-next-line unicorn/consistent-function-scoping
-            const getMatch = (value, searchValue) => {
-                const index = value.toLowerCase().indexOf(searchValue.toLowerCase());
-                const length = index > -1 ? searchValue.length : 0;
-                return {
-                    index: index,
-                    found: index > -1,
-                    pre: value.slice(0, Math.max(0, index)),
-                    match: value.slice(index, index + length),
-                    post: value.slice(Math.max(0, index + length)),
-                };
-            };
-
-            const generateSpans = (match) => {
-                const elements = [];
-                if (match.pre) {
-                    elements.push($('<span/>').text(match.pre));
-                }
-                if (match.match) {
-                    elements.push(
-                        $('<span/>', {
-                            style: 'font-weight: bold; color: var(--red-ui-text-color-link);',
-                        }).text(match.match)
-                    );
-                }
-                if (match.post) {
-                    elements.push($('<span/>').text(match.post));
-                }
-                return elements;
-            };
-
-            const autoCompleteSearch = (options, value) => {
-                console.debug('autoCompleteSearch()');
-                let matches = [];
-                for (const opt of options) {
-                    const optValue = opt.value;
-                    const optSource = (opt.source || []).join(',');
-                    const valueMatch = getMatch(optValue, value);
-                    const sourceMatch = getMatch(optSource, value);
-                    if (valueMatch.found || sourceMatch.found) {
-                        const element = $('<div>', { style: 'display: flex' });
-                        const valueElement = $('<div/>', {
-                            style: 'font-family: var(--red-ui-monospace-font); white-space:nowrap; overflow: hidden; flex-grow:1',
-                        });
-                        valueElement.append(generateSpans(valueMatch));
-                        valueElement.appendTo(element);
-                        if (optSource) {
-                            const optElement = $('<div>').css({ 'font-size': '0.8em' });
-                            optElement.append(generateSpans(sourceMatch));
-                            optElement.appendTo(element);
-                        }
-                        matches.push({
-                            value: optValue,
-                            label: element,
-                            i: valueMatch.found ? valueMatch.index : sourceMatch.index,
-                        });
-                    }
-                }
-
-                matches.sort(function (A, B) {
-                    return A.i - B.i;
-                });
-                matches.unshift({ value: '', label: '*' });
-
-                console.debug('matches', matches);
-                return matches;
-            };
-
-            $('.node-typed-input-property-value').each(function () {
-                const nodeId = $nodeInputJack.val();
-                const id = $(this).attr('id');
-
-                switch (id) {
-                    case 'node-input-program':
-                    case 'node-input-sysvar': {
-                        const type = id.slice(11);
-                        const url = 'jack?config=' + nodeId + '&type=' + type;
-
-                        $.ajax({ url, dataType: 'json', async: false, cache: false })
-                            .done((responseJSON) => {
-                                $(this).typedInput({
-                                    type: 'str',
-                                    types: [
-                                        {
-                                            value: 'str',
-                                            label: 'string',
-                                            icon: 'red/images/typedInput/az.svg',
-                                            autoComplete: (value) => autoCompleteSearch(responseJSON, value),
-                                        },
-                                        {
-                                            value: 're',
-                                            label: 'regular expression',
-                                            icon: 'red/images/typedInput/re.svg',
-                                        },
-                                    ],
-                                    typeField: '#' + id + 'T',
-                                });
-                            })
-                            .fail((jqXHR, textStatus, error) => {
-                                console.dir({ jqXHR, textStatus, error });
-                                RED.notify(`Request failed with: ${jqXHR.status} (${error})`, 'error');
-                            });
-
-                        break;
-                    }
-
-                    default: {
-                        const type = id.slice(11);
-                        $(this).typedInput({
-                            types: [
-                                {
-                                    value: 'str',
-                                    label: 'string',
-                                    icon: 'red/images/typedInput/az.svg',
-                                    autoComplete: (value) => autoCompleteSearch(deviceTree[type], value),
-                                },
-                                { value: 're', label: 'regular expression', icon: 'red/images/typedInput/re.svg' },
-                            ],
-                            typeField: '#' + $(this).attr('id') + 'T',
-                        });
-
-                        $(this).on('change', (event, type, value) => {
-                            console.debug(`${$(this).attr('id')}.on('change', ${event.target.id}, ${type}, ${value})`);
-                            getDeviceTree();
-                        });
-                    }
-                }
-            });
+            onEditPrepare(this);
         },
         oneditsave: function () {
             const $nodeInputDomain = $('#node-input-domain');

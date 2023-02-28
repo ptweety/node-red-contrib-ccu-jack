@@ -17,9 +17,16 @@
 (function () {
     'use strict';
 
-    RED.nodes.registerType('jack-bridge', {
-        category: 'Jack',
-        color: '#b7b7b7',
+    /** Module name must match this nodes html file @constant {string} moduleName */
+    const moduleName = 'jack-bridge';
+    /** Node's palette category @constant {string} paletteCategory */
+    const paletteCategory = 'Jack';
+    /** Node's background color @constant {string} paletteColor */
+    const paletteColor = '#b7b7b7';
+
+    RED.nodes.registerType(moduleName, {
+        category: paletteCategory,
+        color: paletteColor,
         defaults: {
             name: { value: '' },
             jack: { value: 'localhost', type: 'jack-config', required: true },
