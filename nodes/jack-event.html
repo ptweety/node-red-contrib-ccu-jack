@@ -145,62 +145,27 @@
                 const debug = responseJSON?.debug || false;
                 log.debug = debug ? console.debug : function () {};
 
-                result.domains = responseJSON?.domains || {};
-                result.program = responseJSON?.program || {};
-                result.sysvar = responseJSON?.sysvar || {};
-                result.device = responseJSON?.device || {};
-                result.virtdev = responseJSON?.virtdev || {};
+                result.domains = responseJSON?.domains || [];
+                result.rooms = responseJSON?.rooms || [];
+                result.functions = responseJSON?.functions || [];
+                result.program = responseJSON?.program || [];
+                result.sysvar = responseJSON?.sysvar || [];
+                result.device = responseJSON?.device || [];
+                result.virtdev = responseJSON?.virtdev || [];
 
                 log.debug('data', result);
 
                 $nodeInputDomain.empty().append('<option value="">*</option>');
-                for (const index of Object.keys(result.domains)) {
+                for (const index of result.domains) {
                     $nodeInputDomain.append(
                         '<option value="' +
-                            index +
-                            (index === domain ? '" selected>' : '">') +
-                            result.domains[index].title +
+                            index.identifier +
+                            (index.identifier === domain ? '" selected>' : '">') +
+                            index.title +
                             '</option>'
                     );
                 }
                 log.debug(`selected domain: ${$nodeInputDomain.val()}`);
-            })
-            .fail((jqXHR, textStatus, error) => {
-                log.debug({ jqXHR, textStatus, error });
-                RED.notify(`Request failed with: ${jqXHR.status} (${error})`, 'error');
-            });
-
-        return result;
-    }
-
-    function getDeviceTreeFromRuntime(domain) {
-        const nodeId = $('#node-input-jack').val();
-
-        let result = {};
-        if (nodeId === '_ADD_') return result;
-        if (!['device', 'virtdev'].includes(domain)) return result;
-
-        log.debug(`getDeviceTreeFromRuntime(${domain})`);
-        const queryItems = { domain };
-        for (const item of [
-            'interfaceType',
-            'room',
-            'function',
-            'device',
-            'deviceType',
-            'channel',
-            'channelType',
-            'channelIndex',
-            'datapoint',
-        ]) {
-            queryItems[item] = $(`#node-input-${item}`).val();
-            queryItems[item + 'T'] = $(`#node-input-${item}T`).val();
-        }
-
-        $.ajax({ url: `jack/${nodeId}/tree`, data: queryItems, dataType: 'json', async: false, cache: false })
-            .done((responseJSON) => {
-                log.debug(`${domain} data`, responseJSON);
-                result = responseJSON;
             })
             .fail((jqXHR, textStatus, error) => {
                 log.debug({ jqXHR, textStatus, error });
@@ -244,14 +209,95 @@
         return elements;
     }
 
+    function filterDataByInput(domain, data, input) {
+        const $interfaceType = input === 'interfaceType' ? '' : $('#node-input-interfaceType').val();
+        const $room = input === 'room' ? '' : $('#node-input-room').val();
+        const $function = input === 'function' ? '' : $('#node-input-function').val();
+        const $device = input === 'device' ? '' : $('#node-input-device').val();
+        const $deviceType = input === 'deviceType' ? '' : $('#node-input-deviceType').val();
+        const $channel = input === 'channel' ? '' : $('#node-input-channel').val();
+        const $channelType = input === 'channelType' ? '' : $('#node-input-channelType').val();
+        const $channelIndex = input === 'channelIndex' ? '' : $('#node-input-channelIndex').val();
+        const $datapoint = input === 'datapoint' ? '' : $('#node-input-datapoint').val();
+
+        const lists = {
+            interfaceType: new Set(),
+            room: new Set(),
+            function: new Set(),
+            device: [],
+            deviceType: new Set(),
+            channel: [],
+            channelType: new Set(),
+            channelIndex: new Set(),
+            datapoint: new Set(),
+        };
+
+        for (const device of data[domain]) {
+            if ($interfaceType.length > 0 && $interfaceType !== device.interfaceType) continue;
+            if ($device.length > 0 && $device !== device.value) continue;
+            if ($deviceType.length > 0 && $deviceType !== device.deviceType) continue;
+
+            let matchChannel = false;
+            for (const channel of device.channels) {
+                if ($channel.length > 0 && $channel !== channel.value) continue;
+                if ($channelType.length > 0 && $channelType !== channel.channelType) continue;
+                if ($channelIndex.length > 0 && $channelIndex !== channel.channelIndex) continue;
+
+                if ($room.length > 0 && channel.rooms.includes($room)) continue;
+                if ($function.lenght > 0 && channel.functions.includes($function)) continue;
+
+                let matchDatapoint = false;
+                for (const datapoint of channel.datapoints) {
+                    if ($datapoint.length > 0 && $datapoint !== datapoint.value) continue;
+
+                    matchDatapoint = true;
+                    const { value } = datapoint;
+
+                    lists.datapoint.add(value);
+                }
+
+                if (matchDatapoint) {
+                    matchChannel = true;
+                    const { value, source, channelType, channelIndex, rooms, functions } = channel;
+
+                    lists.channel.push({ value, source });
+                    lists.channelType.add(channelType);
+                    lists.channelIndex.add(channelIndex);
+
+                    for (const item of rooms) lists.room.add(item);
+                    for (const item of functions) lists.function.add(item);
+                }
+            }
+
+            if (matchChannel) {
+                const { value, source, deviceType, interfaceType } = device;
+
+                lists.device.push({ value, source });
+                lists.deviceType.add(deviceType);
+                lists.interfaceType.add(interfaceType);
+            }
+        }
+
+        let options = [];
+        if (lists[input] instanceof Set && ['room', 'function'].includes(input)) {
+            options = [...lists[input]].map((value) => {
+                const item = data[`${input}s`].find((element) => element.value === value);
+                return item || { value };
+            });
+        } else if (lists[input] instanceof Set) {
+            options = [...lists[input]].map((value) => ({ value }));
+        } else options = lists[input];
+
+        return options;
+    }
+
     function autoCompleteSearch(node, data, input, value) {
-        log.debug(`autoCompleteSearch(${value})`);
+        log.debug(`autoCompleteSearch(${input}, ${value})`);
         try {
-            const $nodeInputDomain = $('#node-input-domain');
-            const domain = $nodeInputDomain.val() === null ? node.domain : $nodeInputDomain.val();
-            const options = ['program', 'sysvar'].includes(domain)
-                ? data[domain][input]
-                : getDeviceTreeFromRuntime(domain)[input];
+            const $Domain = $('#node-input-domain');
+            const domain = $Domain.val() === null ? node.domain : $Domain.val();
+
+            let options = ['program', 'sysvar'].includes(input) ? data[input] : filterDataByInput(domain, data, input);
 
             let matches = [];
             for (const opt of options) {
@@ -284,7 +330,7 @@
             });
             matches.unshift({ value: '', label: '*' });
 
-            log.debug('matches', matches);
+            // log.debug('matches', matches);
             return matches;
         } catch (error) {
             log.debug(`autoCompleteSearch: ${error}`);
@@ -315,7 +361,7 @@
         };
         refreshDomain();
 
-        let data = getDataFromRuntime(domain);
+        let data; // = getDataFromRuntime(domain);
         refreshFormRows(domain);
 
         $nodeInputJack.on('change', (event, type, value) => {

@@ -25,19 +25,19 @@
         <select id="node-input-domain"></select>
     </div>
 
-    <div class="form-row">
+    <div class="form-row for-device for-virtdev">
         <label for="node-input-device">device</label>
         <input type="text" id="node-input-device" class="node-typed-input-property-value" style="width: calc(100% - 105px)">
         <input type="hidden" id="node-input-deviceT" class="node-typed-input-property-type">
     </div>
 
-    <div class="form-row">
+    <div class="form-row for-device for-virtdev">
         <label for="node-input-channelIndex">channelIndex</label>
         <input type="text" id="node-input-channelIndex" class="node-typed-input-property-value" style="width: calc(100% - 105px)">
         <input type="hidden" id="node-input-channelIndexT" class="node-typed-input-property-type">
     </div>
 
-    <div class="form-row">
+    <div class="form-row for-device for-virtdev">
         <label for="node-input-datapoint">datapoint</label>
         <input type="text" id="node-input-datapoint" class="node-typed-input-property-value" style="width: calc(100% - 105px)">
         <input type="hidden" id="node-input-datapointT" class="node-typed-input-property-type">
@@ -97,53 +97,24 @@
                 const debug = responseJSON?.debug || false;
                 log.debug = debug ? console.debug : function () {};
 
-                result.domains = responseJSON?.domains || {};
-                // result.program = responseJSON?.program || {};
-                // result.sysvar = responseJSON?.sysvar || {};
-                result.device = responseJSON?.device || {};
-                result.virtdev = responseJSON?.virtdev || {};
+                result.domains = responseJSON?.domains || [];
+                result.device = responseJSON?.device || [];
+                result.virtdev = responseJSON?.virtdev || [];
 
                 log.debug('data', result);
 
                 $nodeInputDomain.empty().append('<option value="">*</option>');
-                for (const index of Object.keys(result.domains)) {
-                    if (['device', 'virtdev'].includes(index))
+                for (const index of result.domains) {
+                    if (['device', 'virtdev'].includes(index.identifier))
                         $nodeInputDomain.append(
                             '<option value="' +
-                                index +
-                                (index === domain ? '" selected>' : '">') +
-                                result.domains[index].title +
+                                index.identifier +
+                                (index.identifier === domain ? '" selected>' : '">') +
+                                index.title +
                                 '</option>'
                         );
                 }
                 log.debug(`selected domain: ${$nodeInputDomain.val()}`);
-            })
-            .fail((jqXHR, textStatus, error) => {
-                log.debug({ jqXHR, textStatus, error });
-                RED.notify(`Request failed with: ${jqXHR.status} (${error})`, 'error');
-            });
-
-        return result;
-    }
-
-    function getDeviceTreeFromRuntime(domain) {
-        const nodeId = $('#node-input-jack').val();
-
-        let result = {};
-        if (nodeId === '_ADD_') return result;
-        if (!['device', 'virtdev'].includes(domain)) return result;
-
-        log.debug(`getDeviceTreeFromRuntime(${domain})`);
-        const queryItems = { domain };
-        for (const item of ['device', 'channelIndex', 'datapoint']) {
-            queryItems[item] = $(`#node-input-${item}`).val();
-            queryItems[item + 'T'] = $(`#node-input-${item}T`).val();
-        }
-
-        $.ajax({ url: `jack/${nodeId}/tree`, data: queryItems, dataType: 'json', async: false, cache: false })
-            .done((responseJSON) => {
-                log.debug(`${domain} data`, responseJSON);
-                result = responseJSON;
             })
             .fail((jqXHR, textStatus, error) => {
                 log.debug({ jqXHR, textStatus, error });
@@ -187,14 +158,65 @@
         return elements;
     }
 
+    function filterDataByInput(domain, data, input) {
+        const $device = input === 'device' ? '' : $('#node-input-device').val();
+        const $channelIndex = input === 'channelIndex' ? '' : $('#node-input-channelIndex').val();
+        const $datapoint = input === 'datapoint' ? '' : $('#node-input-datapoint').val();
+
+        const lists = {
+            device: [],
+            channelIndex: new Set(),
+            datapoint: new Set(),
+        };
+
+        for (const device of data[domain]) {
+            if ($device.length > 0 && $device !== device.value) continue;
+
+            let matchChannel = false;
+            for (const channel of device.channels) {
+                if ($channelIndex.length > 0 && $channelIndex !== channel.channelIndex) continue;
+
+                let matchDatapoint = false;
+                for (const datapoint of channel.datapoints) {
+                    if ($datapoint.length > 0 && $datapoint !== datapoint.value) continue;
+
+                    matchDatapoint = true;
+                    const { value } = datapoint;
+
+                    lists.datapoint.add(value);
+                }
+
+                if (matchDatapoint) {
+                    matchChannel = true;
+                    const { channelIndex } = channel;
+
+                    lists.channelIndex.add(channelIndex);
+                }
+            }
+
+            if (matchChannel) {
+                const { value, source /* deviceType, interfaceType */ } = device;
+
+                lists.device.push({ value, source });
+            }
+        }
+
+        let options = [];
+        // eslint-disable-next-line unicorn/prefer-ternary
+        if (lists[input] instanceof Set) {
+            options = [...lists[input]].map((value) => ({ value }));
+        } else options = lists[input];
+
+        return options;
+    }
+
     function autoCompleteSearch(node, data, input, value) {
-        log.debug(`autoCompleteSearch(${value})`);
+        log.debug(`autoCompleteSearch(${input}, ${value})`);
         try {
-            const $nodeInputDomain = $('#node-input-domain');
-            const domain = $nodeInputDomain.val() === null ? node.domain : $nodeInputDomain.val();
-            const options = ['program', 'sysvar'].includes(domain)
-                ? data[domain][input]
-                : getDeviceTreeFromRuntime(domain)[input];
+            const $Domain = $('#node-input-domain');
+            const domain = $Domain.val() === null ? node.domain : $Domain.val();
+
+            let options = ['program', 'sysvar'].includes(input) ? data[input] : filterDataByInput(domain, data, input);
 
             let matches = [];
             for (const opt of options) {
@@ -227,25 +249,25 @@
             });
             matches.unshift({ value: '', label: '*' });
 
-            log.debug('matches', matches);
+            // log.debug('matches', matches);
             return matches;
         } catch (error) {
-            log.debug(error);
+            log.debug(`autoCompleteSearch: ${error}`);
         }
     }
 
     //#endregion ---- Search ----
 
-    // function refreshFormRows(domain) {
-    //     $('.form-row').each(function () {
-    //         for (const item of ['device', 'program', 'sysvar', 'virtdev']) {
-    //             if ($(this).hasClass(`for-${item}`)) {
-    //                 $(this).hide();
-    //             }
-    //         }
-    //         if ($(this).hasClass(`for-${domain}`)) $(this).show();
-    //     });
-    // }
+    function refreshFormRows(domain) {
+        $('.form-row').each(function () {
+            for (const item of ['device', /* 'program', 'sysvar', */ 'virtdev']) {
+                if ($(this).hasClass(`for-${item}`)) {
+                    $(this).hide();
+                }
+            }
+            if ($(this).hasClass(`for-${domain}`)) $(this).show();
+        });
+    }
 
     function onEditPrepare(node) {
         const $nodeInputJack = $('#node-input-jack');
@@ -258,20 +280,20 @@
         };
         refreshDomain();
 
-        let data = getDataFromRuntime(domain);
-        // refreshFormRows(domain);
+        let data; // = getDataFromRuntime(domain);
+        refreshFormRows(domain);
 
         $nodeInputJack.on('change', (event, type, value) => {
             log.debug(`${$(this).attr('id')}.on('change', ${event.target.id}, ${type}, ${value})`);
             refreshDomain();
             data = getDataFromRuntime(domain);
-            // refreshFormRows(domain);
+            refreshFormRows(domain);
         });
 
         $nodeInputDomain.on('change', (event, type, value) => {
             log.debug(`${$(this).attr('id')}.on('change', ${event.target.id}, ${type}, ${value})`);
             refreshDomain();
-            // refreshFormRows(domain);
+            refreshFormRows(domain);
             $nodeInputTopic.trigger('focus');
         });
 
@@ -335,15 +357,15 @@
             onEditPrepare(this);
         },
         oneditsave: function () {
-            // const $nodeInputDomain = $('#node-input-domain');
-            // const domain = $nodeInputDomain.val() || '';
-            //
-            // $('.node-typed-input-property-value').each(function () {
-            //     if (!$(this).parent().hasClass(`for-${domain}`)) {
-            //         $(this).typedInput('type', 'str');
-            //         $(this).typedInput('value', '');
-            //     }
-            // });
+            const $nodeInputDomain = $('#node-input-domain');
+            const domain = $nodeInputDomain.val() || '';
+
+            $('.node-typed-input-property-value').each(function () {
+                if (!$(this).parent().hasClass(`for-${domain}`)) {
+                    $(this).typedInput('type', 'str');
+                    $(this).typedInput('value', '');
+                }
+            });
         },
     });
 })();

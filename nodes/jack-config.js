@@ -1093,16 +1093,16 @@ function nodeInstance(config) {
         });
 
     this.getDomainsForEditor = () => {
-        let domains = {};
+        let result = [];
         for (const domain of [domainTypes.DEVICE, domainTypes.PROGRAM, domainTypes.SYSVAR, domainTypes.VIRTDEV]) {
             const item = this.contextStore[domain]['.'];
-            domains[domain] = {
+            result.push({
                 description: item.description,
                 identifier: item.identifier,
                 title: item.title,
-            };
+            });
         }
-        return domains;
+        return result;
     };
 
     this.getProgramsSysvarsForEditor = ({ domain }) => {
@@ -1119,143 +1119,56 @@ function nodeInstance(config) {
         return result;
     };
 
-    this.getFilteredDeviceTreeForEditor = (requestQuery) => {
-        const rQ = requestQuery;
+    this.getDevicesVirtdevsForEditor = ({ domain }) => {
         try {
-            const rqDomain =
-                rQ.domain && [domainTypes.DEVICE, domainTypes.VIRTDEV].includes(rQ.domain)
-                    ? rQ.domain
-                    : domainTypes.DEVICE;
-            const rqInterfaceType = rQ.interfaceType && rQ.interfaceTypeT === 'str' ? rQ.interfaceType.split(',') : [];
-            const rqRoom = rQ.room && rQ.roomT === 'str' ? rQ.room.split(',') : [];
-            const rqFunction = rQ.function && rQ.functionT === 'str' ? rQ.function.split(',') : [];
-            const rqDevice = rQ.device && rQ.deviceT === 'str' ? rQ.device.split(',') : [];
-            const rqDeviceType = rQ.deviceType && rQ.deviceTypeT === 'str' ? rQ.deviceType.split(',') : [];
-            const rqChannel = rQ.channel && rQ.channelT === 'str' ? rQ.channel.split(',') : [];
-            const rqChannelType = rQ.channelType && rQ.channelTypeT === 'str' ? rQ.channelType.split(',') : [];
-            const rqChannelIndex = rQ.channelIndex && rQ.channelIndexT === 'str' ? rQ.channelIndex.split(',') : [];
-            const rqDatapoint = rQ.datapoint && rQ.datapointT === 'str' ? rQ.datapoint.split(',') : [];
+            const result = [];
+            const items = this.contextStore[domain];
 
-            const result = {
-                interfaceType: new Map(),
-                room: new Map(),
-                function: new Map(),
-                device: new Map(),
-                deviceType: new Map(),
-                channel: new Map(),
-                channelType: new Map(),
-                channelIndex: new Map(),
-                datapoint: new Map(),
-            };
-
-            for (const device of Object.keys(this.contextStore[rqDomain])) {
-                const deviceItem = this.contextStore[rqDomain][device]['.'];
+            for (const device of Object.keys(items)) {
+                const deviceItem = items[device]['.'];
                 if (device === '.') continue;
 
-                if (
-                    (rqDeviceType.length === 0 || rqDeviceType.includes(deviceItem.type)) &&
-                    (rqInterfaceType.length === 0 || rqInterfaceType.includes(deviceItem.interfaceType)) &&
-                    (rqDevice.length === 0 || rqDevice.includes(device))
-                ) {
-                    let matchChannel = false;
+                const channels = [];
 
-                    for (const channel of Object.keys(this.contextStore[rqDomain][device])) {
-                        const channelItem = this.contextStore[rqDomain][device][channel]['.'];
-                        if (channel === '.') continue;
+                for (const channel of Object.keys(items[device])) {
+                    const channelItem = items[device][channel]['.'];
+                    if (channel === '.') continue;
 
-                        if (rqRoom.length > 0 && !channelItem.rooms.some((r) => rqRoom.includes(r))) continue;
+                    const datapoints = [];
 
-                        if (rqFunction.length > 0 && !channelItem.functions.some((f) => rqFunction.includes(f)))
-                            continue;
+                    for (const datapoint of Object.keys(items[device][channel])) {
+                        const datapointItem = items[device][channel][datapoint]['.'];
+                        if (datapoint === '.') continue;
 
-                        if (
-                            (rqChannelType.length === 0 || rqChannelType.includes(channelItem.type)) &&
-                            (rqChannel.length === 0 || rqChannel.includes(device + ':' + channel))
-                        ) {
-                            let matchDatapoint = false;
-
-                            for (const datapoint of Object.keys(this.contextStore[rqDomain][device][channel])) {
-                                const datapointItem = this.contextStore[rqDomain][device][channel][datapoint]['.'];
-                                if (datapoint === '.') continue;
-
-                                if (rqDatapoint.length === 0 || rqDatapoint.includes(datapoint)) {
-                                    matchDatapoint = true;
-
-                                    result.datapoint.set(datapointItem.identifier, {
-                                        value: datapointItem.identifier,
-                                        source: [],
-                                    });
-                                }
-                            }
-
-                            if (matchDatapoint) {
-                                matchChannel = true;
-
-                                for (const room of channelItem.rooms) {
-                                    const roomItem = this.contextStore[domainTypes.ROOM][room]['.'];
-
-                                    result.room.set(roomItem.identifier, {
-                                        value: roomItem.identifier,
-                                        source: [roomItem.title],
-                                    });
-                                }
-
-                                for (const function_ of channelItem.functions) {
-                                    const functionItem = this.contextStore[domainTypes.FUNCTION][function_]['.'];
-
-                                    result.function.set(functionItem.identifier, {
-                                        value: functionItem.identifier,
-                                        source: [functionItem.title],
-                                    });
-                                }
-
-                                result.channel.set(channelItem.address, {
-                                    value: channelItem.address,
-                                    source: [channelItem.title],
-                                });
-
-                                result.channelType.set(channelItem.type, {
-                                    value: channelItem.type,
-                                    source: [],
-                                });
-
-                                if (rqChannelIndex.length === 0 || rqChannelIndex.includes(channelItem.identifier))
-                                    result.channelIndex.set(channelItem.identifier, {
-                                        value: channelItem.identifier,
-                                        source: [],
-                                    });
-                            }
-                        }
-                    }
-
-                    if (matchChannel) {
-                        result.interfaceType.set(deviceItem.interfaceType, {
-                            value: deviceItem.interfaceType,
+                        datapoints.push({
+                            value: datapointItem.identifier,
                             source: [],
                         });
-
-                        result.deviceType.set(deviceItem.type, {
-                            value: deviceItem.type,
-                            source: [],
-                        });
-
-                        if (rqDevice.length === 0 || rqDevice.includes(device))
-                            result.device.set(deviceItem.identifier, {
-                                value: deviceItem.identifier,
-                                source: [deviceItem.title],
-                            });
                     }
+
+                    channels.push({
+                        value: channelItem.address,
+                        source: [channelItem.title],
+                        channelType: channelItem.type,
+                        channelIndex: channelItem.index.toString(),
+                        functions: [...channelItem.functions],
+                        rooms: [...channelItem.rooms],
+                        datapoints,
+                    });
                 }
+
+                result.push({
+                    value: deviceItem.identifier,
+                    source: [deviceItem.title],
+                    deviceType: deviceItem.type,
+                    interfaceType: deviceItem.interfaceType,
+                    channels,
+                });
             }
 
-            return Object.fromEntries(
-                Object.entries(result).map(([k, v]) => [
-                    k,
-                    v instanceof Map ? [...v.values()].sort((a, b) => a.value.localeCompare(b.value)) : v,
-                ])
-            );
+            return result;
         } catch (error) {
-            throw `getFilteredDeviceTreeForEditor: ${error}`;
+            throw `getDevicesVirtdevsForEditor: ${error}`;
         }
     };
 
@@ -1269,19 +1182,10 @@ function nodeInstance(config) {
                         response.status(200).json({ debug });
                         break;
                     }
+
                     case 'discover':
                     case 'net': {
                         response.status(200).json({ debug, ...this.network });
-                        break;
-                    }
-                    case 'tree': {
-                        try {
-                            const result = this.getFilteredDeviceTreeForEditor(request.query);
-                            response.status(200).json({ debug, ...result });
-                        } catch (error) {
-                            this.debug(`httpAdmin.get /jack/${request.params.id}/${request.params.type}: ${error}`);
-                            response.status(500).json({ debug, error });
-                        }
                         break;
                     }
 
@@ -1291,14 +1195,28 @@ function nodeInstance(config) {
                                 debug,
                                 ...this.network,
                                 domains: this.getDomainsForEditor(),
+                                rooms: [],
+                                functions: [],
                             };
 
+                            for (const domain of [domainTypes.ROOM, domainTypes.FUNCTION]) {
+                                const items = this.contextStore[domain];
+
+                                for (const item of Object.keys(items)) {
+                                    if (item !== '.')
+                                        responseJSON[`${domain}s`].push({
+                                            value: items[item]['.'].identifier,
+                                            source: [items[item]['.'].title],
+                                        });
+                                }
+                            }
+
                             for (const domain of [domainTypes.PROGRAM, domainTypes.SYSVAR]) {
-                                responseJSON[domain] = { [domain]: this.getProgramsSysvarsForEditor({ domain }) };
+                                responseJSON[domain] = this.getProgramsSysvarsForEditor({ domain });
                             }
 
                             for (const domain of [domainTypes.DEVICE, domainTypes.VIRTDEV]) {
-                                responseJSON[domain] = this.getFilteredDeviceTreeForEditor({ domain });
+                                responseJSON[domain] = this.getDevicesVirtdevsForEditor({ domain });
                             }
 
                             response.status(200).json(responseJSON);
