@@ -2,8 +2,21 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v0.0.12](https://github.com/ptweety/node-red-contrib-ccu-jack/compare/v0.0.11...v0.0.12)
+
+- chore: update dependencies [`da741b5`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/da741b518578f9a1e40f835a3b5ce48c8d61fd38)
+- chore: update dev dependencies [`468b871`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/468b871da4e0527e11d2858a688d4191053a3e15)
+- refactor: move device tree filter from runtime to editor [`61a3c21`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/61a3c217a5c646c1789a90aad637507e85f4f81c)
+- fix: drop unused test data [`dda4179`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/dda4179bb21a8d0a9682b1c9534575b9af498142)
+- refactor: communication between runtime and editor [`8ec933a`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/8ec933a1f50799e9ab7f96bdbf996ebe7e91a96d)
+- fix: disable caching for editor requests [`22c25ef`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/22c25ef10b04eb69b02089cea34fd9aa23de3404)
+- fix: add missing updates to the editor [`f63c614`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/f63c614c526697d2f1cb96f49faa6dc10e4cd1e7)
+
 #### [v0.0.11](https://github.com/ptweety/node-red-contrib-ccu-jack/compare/v0.0.10...v0.0.11)
 
+> 24 February 2023
+
+- chore: bump version to 0.0.11 [`9291271`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/9291271cfc85cbbf6a9b64ebcc776dcac9ba6e31)
 - fix: more debug messages [`4cd71fb`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/4cd71fb8849b959db6d5058b79fe23cb95b5c9d2)
 - chore: update dependencies [`d143445`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/d143445f88fb57eb4d93f2f3f72cdb0fc9ed90a4)
 - fix: improve some debug logs [`e875146`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/e875146d546700d90b56aee32704421de6784a18)
