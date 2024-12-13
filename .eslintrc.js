@@ -52,7 +52,9 @@ module.exports = {
         'promise/no-new-statics': 'error',
         'promise/no-return-in-finally': 'warn',
         'promise/valid-params': 'warn',
+        'unicorn/consistent-existence-index-check': 'off',
         'unicorn/prefer-module': 'off',
+        'unicorn/no-anonymous-default-export': 'off',
         'unicorn/prefer-node-protocol': 'off',
     },
 };

@@ -18,7 +18,8 @@
             "type": "node",
             "request": "launch",
             "skipFiles": [
-                "<node_internals>/**"
+                "<node_internals>/**",
+                "!**/node_modules/**"
             ],
             "env": {
                 // "DEBUG": "mqttjs,mqttjs:*",
@@ -28,6 +29,9 @@
             },
             // "outputCapture": "std",
             // "console": "integratedTerminal",
+            "runtimeArgs": [
+                "--trace-deprecation",
+            ],
             "program": "${workspaceFolder}/node_modules/node-red/red.js",
             "args": [
                 "-s",

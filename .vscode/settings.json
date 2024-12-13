@@ -2,21 +2,19 @@
   "[javascript]": {
     "editor.defaultFormatter": "dbaeumer.vscode-eslint",
     "editor.codeActionsOnSave": {
-      "source.fixAll.eslint": true
+      "source.fixAll.eslint": "explicit"
     }
   },
   "[html]": {
     "editor.defaultFormatter": "vscode.html-language-features",
     "editor.codeActionsOnSave": {
-      "source.fixAll.eslint": true
+      "source.fixAll.eslint": "explicit"
     }
   },
   "eslint.enable": true,
   "eslint.format.enable": true,
-  "eslint.codeActionsOnSave.mode": "problems",
-  "eslint.options": {
-    "extensions": [".js", ".html"]
-  },
+  "eslint.codeActionsOnSave.mode": "all",
+  "eslint.options": {},
   "eslint.validate": ["javascript", "html"],
   "prettier.enable": true,
   "prettier.singleQuote": true,
