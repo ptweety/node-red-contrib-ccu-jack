@@ -1239,9 +1239,9 @@ function nodeInstance(config) {
 module.exports = (RED) => {
     nodeConfig.RED = RED;
 
-    RED.log.debug('node-red-contrib-ccu-jack version: ' + package_.version);
+    RED.log.info('node-red-contrib-ccu-jack version: ' + package_.version);
 
-    if (process.env.NRCCJ_DEV === 'true' || ['debug', 'trace'].includes(RED.settings.logging.console.level)) {
+    if (process.env.NRCCJ_DEV === 'true') {
         RED.log.warn(`[${nodeConfig.nodeName}] Development features enabled`);
         nodeConfig.debug = true;
     }
