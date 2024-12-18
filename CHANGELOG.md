@@ -2,8 +2,16 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v0.0.13](https://github.com/ptweety/node-red-contrib-ccu-jack/compare/v0.0.12...v0.0.13)
+
+- fix: debug feature [`4b25e8c`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/4b25e8ca510baa17d5ef8ed1c171170d9b076c93)
+- chore: update (dev)-dependencies [`017aa85`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/017aa8537b6e77703e10260f4f216a84ea8d3ae2)
+
 #### [v0.0.12](https://github.com/ptweety/node-red-contrib-ccu-jack/compare/v0.0.11...v0.0.12)
 
+> 6 October 2023
+
+- chore: bump version [`0eb6377`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/0eb6377c155fadad26e6135952439675d4a3f194)
 - chore: update dependencies [`da741b5`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/da741b518578f9a1e40f835a3b5ce48c8d61fd38)
 - chore: update dev dependencies [`468b871`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/468b871da4e0527e11d2858a688d4191053a3e15)
 - refactor: move device tree filter from runtime to editor [`61a3c21`](https://github.com/ptweety/node-red-contrib-ccu-jack/commit/61a3c217a5c646c1789a90aad637507e85f4f81c)
