@@ -106,7 +106,6 @@ function nodeInstance(config) {
             this.handleMessageQueue();
         } else {
             if (this.rootDomains.length > 0)
-                // eslint-disable-next-line unicorn/no-null
                 this.send([
                     { topic: 'disconnected', connected: this.connected },
                     { topic: [...this.rootDomains], action: 'unsubscribe' },

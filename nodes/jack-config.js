@@ -36,7 +36,6 @@ function nodeInstance(config) {
 
     this.debug(`Starting node : ${this.config.id}`);
 
-    // eslint-disable-next-line unicorn/no-this-assignment
     // const node = this;
 
     this.status = statusTypes.BLANK;

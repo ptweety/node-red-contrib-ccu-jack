@@ -41,6 +41,7 @@ function isValidTopic(topic) {
 function sortObject(object) {
     return (
         Object.keys(object)
+            // eslint-disable-next-line unicorn/no-array-sort
             .sort()
             // eslint-disable-next-line unicorn/no-array-reduce
             .reduce((result, key) => ((result[key] = object[key]), result), {})
